@@ -11,6 +11,7 @@ import { ShiftType, DayAssignment, Holiday } from './types';
 import { formatDateKey } from './helpers';
 import { Session } from '@supabase/supabase-js';
 import { BezelFrame, ShifterLogo } from './components/VisualEffects';
+import { storageService } from './services/storage';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
