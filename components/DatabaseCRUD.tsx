@@ -112,10 +112,13 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
             let query = supabase.from(tableName).select('*').limit(100);
 
             // Apply isolation if not the profiles table itself
-            if (tableName !== 'profiles' && pid) {
-                query = query.eq('profile_id', pid);
-            } else if (tableName === 'profiles') {
+            if (tableName === 'profiles') {
                 query = query.eq('user_id', userId);
+            } else if (tableName === 'holidays' && pid) {
+                // For holidays, show both user-specific and global (null profile_id)
+                query = query.or(`profile_id.eq.${pid},profile_id.is.null`);
+            } else if (pid) {
+                query = query.eq('profile_id', pid);
             }
 
             const { data: res, error } = await query;

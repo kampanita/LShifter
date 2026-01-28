@@ -104,8 +104,8 @@ export const Calendar: React.FC<Props> = ({
               const isHoliday = !!holiday;
 
               // DEBUG: Log first 3 days and any holidays found
-              if (index < 3 || isHoliday) {
-                console.log(`📅 Day ${date.getDate()}: dateKey="${dateKey}", holiday=`, holiday, `isHoliday=${isHoliday}`);
+              if (index < 1 || isHoliday) {
+                console.log(`🔍 CALENDAR_RENDER - Day ${date.getDate()}: key="${dateKey}", isHoliday=${isHoliday}, hasData=${!!holidays[dateKey]}`);
               }
 
               const dayOfWeek = date.getDay();

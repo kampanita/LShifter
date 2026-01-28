@@ -70,7 +70,7 @@ function App() {
     };
 
     const fetchHolidays = async (pId: string) => {
-      console.log("Fetching holidays for profile:", pId);
+      console.log("🔍 FETCH_HOLIDAYS - Started for profile:", pId);
       try {
         const { data, error } = await supabase
           .from('holidays')
@@ -78,32 +78,24 @@ function App() {
           .or(`profile_id.eq.${pId},profile_id.is.null`);
 
         if (error) {
-          console.error("Error fetching holidays:", error);
+          console.error("❌ FETCH_HOLIDAYS - Error:", error);
           return;
         }
 
-        if (data) {
-          console.log("Holidays data received:", data.length, "rows", data);
+        console.log(`📊 FETCH_HOLIDAYS - Received ${data?.length || 0} rows from DB`);
+
+        if (data && data.length > 0) {
           const mapped: Record<string, Holiday> = {};
           data.forEach((h: any) => {
             if (!h.date) {
-              console.warn("Holiday without date:", h);
-              return;
-            }
-            // Normalize date: handle both DATE and TIMESTAMP formats
-            // PostgreSQL DATE type returns 'YYYY-MM-DD'
-            // TIMESTAMP returns 'YYYY-MM-DDTHH:MM:SS'
-            let dStr: string;
-            if (typeof h.date === 'string') {
-              dStr = h.date.split(/[T ]/)[0];
-            } else if (h.date instanceof Date) {
-              dStr = formatDateKey(h.date);
-            } else {
-              console.warn("Unexpected date format:", h.date);
+              console.warn("⚠️ FETCH_HOLIDAYS - Holiday without date:", h);
               return;
             }
 
-            console.log(`Mapping holiday: ${h.name} on ${dStr}`);
+            // Normalize date: handles 'YYYY-MM-DD' or 'YYYY-MM-DDTHH:MM:SS'
+            let dStr = typeof h.date === 'string' ? h.date.split(/[T ]/)[0] : formatDateKey(new Date(h.date));
+
+            console.log(`✅ FETCH_HOLIDAYS - Mapped: [${h.name}] on [${dStr}]`);
             mapped[dStr] = {
               id: h.id,
               date: dStr,
@@ -111,17 +103,23 @@ function App() {
               country_code: h.country_code
             };
           });
-          console.log("Final holidays object:", mapped);
+          console.log("📦 FETCH_HOLIDAYS - Final Object Keys:", Object.keys(mapped));
           setHolidays(mapped);
+        } else {
+          console.log("ℹ️ FETCH_HOLIDAYS - No holidays found in database for this query.");
         }
       } catch (err) {
-        console.error("fetchHolidays exception:", err);
+        console.error("💥 FETCH_HOLIDAYS - Exception:", err);
       }
     };
 
     const resolveProfile = async () => {
-      if (!session?.user || !userId) return;
+      if (!session?.user || !userId) {
+        console.warn("⚠️ RESOLVE_PROFILE - No session or userId, skipping");
+        return;
+      }
 
+      console.log("👤 RESOLVE_PROFILE - Resolving for user:", userId);
       try {
         const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
 
@@ -132,15 +130,24 @@ function App() {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ RESOLVE_PROFILE - Upsert error:', error);
+          throw error;
+        }
 
         if (profile) {
-          if (profile.id !== profileId) setProfileId(profile.id);
+          console.log("✅ RESOLVE_PROFILE - Profile resolved:", profile.id, profile.name);
+          if (profile.id !== profileId) {
+            console.log("🔄 RESOLVE_PROFILE - Updating profileId state to:", profile.id);
+            setProfileId(profile.id);
+          }
           fetchShifts(profile.id);
           fetchHolidays(profile.id);
+        } else {
+          console.warn("⚠️ RESOLVE_PROFILE - No profile returned after upsert");
         }
       } catch (err) {
-        console.error('Profile resolution failed:', err);
+        console.error('💥 RESOLVE_PROFILE - Exception:', err);
       }
     };
 
