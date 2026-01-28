@@ -33,7 +33,7 @@ export const StatisticsView: React.FC<Props> = ({ currentDate: initialDate, assi
             if (assignment?.shiftTypeId) {
                 const shift = shiftTypes.find(s => s.id === assignment.shiftTypeId);
                 if (shift) {
-                    const duration = shift.default_duration || 0;
+                    const duration = Number(shift.default_duration) || 0;
                     const dayOfWeek = day.getDay();
                     const isHoliday = !!holidays[key];
                     const isSunday = dayOfWeek === 0;
