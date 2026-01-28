@@ -113,7 +113,8 @@ function App() {
         }
 
         // Deduplicate by Name (Keep last or first? Keep DB existing preferred over recent insert if conflict, but here we just merge)
-        const uniqueData = Array.from(new Map(finalData.map(item => [item.name, item])).values());
+        // Deduplicate by Name (Case Insensitive)
+        const uniqueData = Array.from(new Map(finalData.map(item => [item.name?.trim().toLowerCase(), item])).values());
 
         // Map to App State (Domain = Hours)
         const mapped: ShiftType[] = uniqueData.map((s: any) => {
