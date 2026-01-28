@@ -322,7 +322,7 @@ function App() {
           )}
 
           {currentView === 'stats' && (
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="absolute inset-0 flex flex-col">
               <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
                 <button
                   onClick={() => setIsMenuOpen(true)}
@@ -332,12 +332,14 @@ function App() {
                 </button>
                 <h1 className="text-xl font-bold text-slate-800">Estadísticas</h1>
               </header>
-              <StatisticsView
-                currentDate={currentDate}
-                assignments={assignments}
-                shiftTypes={shiftTypes}
-                holidays={holidays}
-              />
+              <div className="flex-1 relative">
+                <StatisticsView
+                  currentDate={currentDate}
+                  assignments={assignments}
+                  shiftTypes={shiftTypes}
+                  holidays={holidays}
+                />
+              </div>
             </div>
           )}
 
@@ -347,7 +349,7 @@ function App() {
             { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
             { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
           ].map((view) => currentView === view.id && (
-            <div key={view.id} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div key={view.id} className="absolute inset-0 flex flex-col">
               <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
                 <button
                   onClick={() => setIsMenuOpen(true)}

@@ -211,7 +211,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
     if (!tableDef) return <div className="p-10 text-center">Table {tableName} removed from Hub.</div>;
 
     return (
-        <div className="flex-1 flex flex-col bg-[#F3F4F6] min-h-0">
+        <div className="flex-1 flex flex-col bg-[#F3F4F6] relative">
             {/* TOOLBAR */}
             <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-6">
@@ -250,7 +250,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-[#F3F4F6] min-h-0">
+            <div className="absolute inset-0 overflow-y-auto bg-[#F3F4F6]">
                 <div className="p-6">
                     {errorNotice && <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl text-red-700 text-xs">{errorNotice}</div>}
 

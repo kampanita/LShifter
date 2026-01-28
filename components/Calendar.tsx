@@ -51,9 +51,9 @@ export const Calendar: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#F1F5F9] select-none p-2 md:p-8 min-h-0">
+    <div className="flex-1 flex flex-col bg-[#F1F5F9] select-none p-2 md:p-8">
       {/* RESTORED DARK PANEL INSIDE LIGHT BACKGROUND */}
-      <div className="flex-1 flex flex-col bg-[#0b121e] rounded-[1.2rem] md:rounded-[2rem] border border-[#1e293b] shadow-2xl overflow-hidden relative min-h-0">
+      <div className="flex-1 flex flex-col bg-[#0b121e] rounded-[1.2rem] md:rounded-[2rem] border border-[#1e293b] shadow-2xl overflow-hidden relative">
 
         {/* HEADER BAR */}
         <div className="h-1 bg-gradient-to-r from-transparent via-[#00a8ff] to-transparent opacity-50 z-20"></div>
@@ -74,7 +74,7 @@ export const Calendar: React.FC<Props> = ({
         </div>
 
         {/* SCROLLABLE DAYS CONTAINER */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="absolute inset-0 overflow-y-auto" style={{ top: '64px' }}>
           {/* DAYS GRID */}
           <div
             className="grid grid-cols-7 p-1 md:p-3 gap-1 md:gap-2.5"

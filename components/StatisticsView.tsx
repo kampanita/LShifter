@@ -68,7 +68,7 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
     const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#F8FAFC] min-h-0">
+        <div className="absolute inset-0 overflow-y-auto bg-[#F8FAFC]">
             <div className="p-4 md:p-8 space-y-6 md:space-y-8">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

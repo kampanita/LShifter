@@ -1,1 +1,38 @@
-if(!self.define){let e,f={};const n=(n,i)=>(n=new URL(n+".js",i).href,f[n]||new Promise(f=>{if("document"in self){const e=document.createElement("script");e.src=n,e.onload=f,document.head.appendChild(e)}else e=n,importScripts(n),f()}).then(()=>{let e=f[n];if(!e)throw new Error(`Module ${n} didn’t register its module`);return e}));self.define=(i,s)=>{const r=e||("document"in self?document.currentScript.src:"")||location.href;if(f[r])return;let o={};const l=e=>n(e,r),d={module:{uri:r},exports:o,require:l};f[r]=Promise.all(i.map(e=>d[e]||l(e))).then(e=>(s(...e),o))}}define(["./workbox-8c29f6e4"],function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"pwa-512x512.png",revision:"fed5edaabf4f6911f08813292e5f7f9f"},{url:"pwa-192x192.png",revision:"fed5edaabf4f6911f08813292e5f7f9f"},{url:"index.html",revision:"7185e5d7fdef3fe75e440840dbdb3be6"},{url:"apple-touch-icon.png",revision:"fed5edaabf4f6911f08813292e5f7f9f"},{url:"assets/workbox-window.prod.es5-BIl4cyR9.js",revision:null},{url:"assets/index-DYunjlXy.css",revision:null},{url:"assets/index-Bs51e3G_.js",revision:null},{url:"apple-touch-icon.png",revision:"fed5edaabf4f6911f08813292e5f7f9f"},{url:"pwa-192x192.png",revision:"fed5edaabf4f6911f08813292e5f7f9f"},{url:"pwa-512x512.png",revision:"fed5edaabf4f6911f08813292e5f7f9f"},{url:"manifest.webmanifest",revision:"0fd78cab9c5d0a0b51994cf47f90089c"}],{}),e.cleanupOutdatedCaches(),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))});
+// Simple cache-first service worker
+const CACHE_NAME = 'app-v1';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/manifest.json'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
