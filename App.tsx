@@ -52,7 +52,7 @@ function App() {
   // Sync Shift Types and Data from Supabase
   useEffect(() => {
     const fetchShifts = async (pId: string) => {
-      const { data } = await supabase.from('shift_types').select('*').eq('profile_id', pId).order('name');
+      const { data } = await supabase.from('shift_types').select('*').or(`profile_id.eq.${pId},profile_id.is.null`).order('name');
       if (data) {
         const mapped: ShiftType[] = data.map((s: any) => ({
           id: s.id,
@@ -69,7 +69,8 @@ function App() {
 
     const fetchHolidays = async (pId: string) => {
       console.log("Fetching holidays for profile:", pId);
-      const { data, error } = await supabase.from('holidays').select('*').eq('profile_id', pId);
+      // Fetch user's holidays OR holidays with no owner (pre-migration)
+      const { data, error } = await supabase.from('holidays').select('*').or(`profile_id.eq.${pId},profile_id.is.null`);
       if (error) {
         console.error("Error fetching holidays:", error);
         return;
@@ -121,7 +122,7 @@ function App() {
     if (userId) {
       setAssignments(storageService.getAssignments(userId));
     }
-  }, [session, userId, currentView]);
+  }, [session, userId, profileId, currentView]); // Added profileId as dependency
 
   const handlePaint = useCallback((date: Date) => {
     if (!session?.user || !selectedShiftTypeId) return;
@@ -180,7 +181,12 @@ function App() {
             <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Work Life In Sync</p>
           </div>
           <button
-            onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })}
+            onClick={() => supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: window.location.origin + (import.meta.env.BASE_URL || '/')
+              }
+            })}
             className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-slate-100 hover:border-indigo-500 hover:bg-slate-50 transition-all p-4 rounded-2xl font-bold text-slate-700 shadow-sm overflow-hidden relative group"
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/listbox/google.svg" className="w-6 h-6" alt="Google" />
