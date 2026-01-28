@@ -17,6 +17,7 @@
   border-color: #374151 !important;
   color: #e5e7eb !important;
 }
+
 .app[data-theme="sunset"] header {
   background: linear-gradient(90deg, #ffd6a8, #ff9a6a) !important;
   border-color: #f5c47d !important;
@@ -28,6 +29,47 @@
   background-color: #111827 !important;
   color: #e5e7eb !important;
 }
+
 .app[data-theme="sunset"] .bg-white {
   background-color: #fffaf0 !important;
+}
+
+/* 3D and Logo Animations */
+@keyframes shifter-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes shifter-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.2));
+  }
+
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 8px 20px rgba(99, 102, 241, 0.4));
+  }
+}
+
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bezel-3d {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 10px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+.app[data-theme="dark"] .glass-morphism {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
