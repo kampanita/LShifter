@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/data/supabaseClient';
+import { HolidaysImporter } from './HolidaysImporter';
 
 /**
  * DATABASE SCHEMA METADATA
@@ -72,6 +73,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any | null>(null);
     const [errorNotice, setErrorNotice] = useState<string | null>(null);
+    const [isImporterOpen, setIsImporterOpen] = useState(false);
 
     const tableDef = SCHEMA[tableName];
 
@@ -158,6 +160,28 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         }
     };
 
+    const handleBulkImport = async (holidays: { date: string, name: string }[]) => {
+        try {
+            setLoading(true);
+            const payload = holidays.map(h => ({
+                date: h.date,
+                name: h.name,
+                country_code: 'ES'
+            }));
+
+            // Upsert or insert (holidays table might not have unique constraint on date, 
+            // but for simplicity we insert or can check for duplicates)
+            const { error } = await supabase.from('holidays').insert(payload);
+            if (error) throw error;
+
+            fetchData();
+        } catch (err: any) {
+            alert("Bulk Import failed: " + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (!tableDef) return <div className="p-10 text-center">Table {tableName} removed from Hub.</div>;
 
     return (
@@ -174,6 +198,17 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
 
                 <div className="flex items-center space-x-2">
                     <button onClick={fetchData} className="w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 rounded-xl border border-slate-100"><i className={`fa-solid fa-rotate ${loading ? 'fa-spin' : ''}`}></i></button>
+
+                    {tableName === 'holidays' && (
+                        <button
+                            onClick={() => setIsImporterOpen(true)}
+                            className="bg-emerald-50 text-emerald-600 px-5 py-2.5 rounded-xl font-bold flex items-center space-x-2 border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all"
+                        >
+                            <i className="fa-solid fa-cloud-arrow-down text-xs"></i>
+                            <span>Importar Calendario Oficial</span>
+                        </button>
+                    )}
+
                     <button onClick={() => {
                         const newItem: any = {};
                         tableDef.fields.forEach(f => {
@@ -281,6 +316,13 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {isImporterOpen && (
+                <HolidaysImporter
+                    onClose={() => setIsImporterOpen(false)}
+                    onImport={handleBulkImport}
+                />
             )}
         </div>
     );
