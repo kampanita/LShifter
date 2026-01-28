@@ -5,10 +5,15 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+
+  // Only use the subfolder base path when deploying to GitHub Pages
+  // Locally (npm run dev) we want and need the root path "/"
+  const isProduction = process.env.GITHUB_ACTIONS === 'true';
   const repoName = (process.env.GITHUB_REPOSITORY || 'LShifter').split('/').pop() || 'LShifter';
+  const base = isProduction ? `/${repoName}/` : '/';
 
   return {
-    base: `/${repoName}/`,
+    base: base,
     server: {
       port: 3000,
       host: '0.0.0.0',
@@ -30,8 +35,8 @@ export default defineConfig(({ mode }) => {
           background_color: '#ffffff',
           display: 'standalone',
           orientation: 'portrait',
-          scope: `/${repoName}/`,
-          start_url: `/${repoName}/`,
+          scope: base,
+          start_url: base,
           icons: [
             {
               src: 'pwa-192x192.png',
