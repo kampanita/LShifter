@@ -17,8 +17,8 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
           onClick={() => onSelect(null)}
           className={`
             flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border-2 transition-all
-            ${selectedId === null 
-              ? 'border-indigo-600 bg-indigo-50 transform scale-105' 
+            ${selectedId === null
+              ? 'border-indigo-600 bg-indigo-50 transform scale-105'
               : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}
           `}
         >
@@ -32,34 +32,34 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
             key={shift.id}
             onClick={() => onSelect(shift.id)}
             className={`
-              flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border-2 transition-all relative overflow-hidden
-              ${selectedId === shift.id 
-                ? 'border-indigo-600 transform scale-105 shadow-md' 
-                : 'border-transparent opacity-90 hover:opacity-100'}
+              flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-xl border-2 transition-all relative overflow-hidden active:scale-95
+              ${selectedId === shift.id
+                ? 'border-white ring-4 ring-indigo-500/30 transform scale-110 z-10 shadow-lg'
+                : 'border-transparent opacity-80 hover:opacity-100'}
             `}
             style={{ backgroundColor: shift.color }}
           >
-            <span className="text-lg font-bold text-white shadow-black drop-shadow-sm">{shift.code}</span>
-            <span className="text-[10px] text-white opacity-90 truncate w-full text-center px-1">
+            <span className="text-lg font-black text-white drop-shadow-md">{shift.code}</span>
+            <span className="text-[9px] text-white/90 font-bold truncate w-full text-center px-1">
               {shift.startTime}
             </span>
             {selectedId === shift.id && (
-               <div className="absolute inset-0 border-2 border-white rounded-xl opacity-30"></div>
+              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
             )}
           </button>
         ))}
 
         {/* Add/Edit Button */}
         <div className="border-l border-slate-300 pl-4 h-10 flex items-center">
-            <button
+          <button
             onClick={onEdit}
             className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-indigo-600 transition-colors"
-            >
+          >
             <i className="fa-solid fa-pen"></i>
-            </button>
+          </button>
         </div>
       </div>
-      
+
       <div className="text-center text-xs text-slate-400 mt-1">
         {selectedId ? 'Tap or drag on dates to paint' : 'Tap dates to erase'}
       </div>

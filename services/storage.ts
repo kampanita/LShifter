@@ -5,7 +5,6 @@ const DEFAULT_SHIFTS: ShiftType[] = [
   { id: '1', name: 'Morning', code: 'M', color: '#10b981', startTime: '06:00', endTime: '14:00' },
   { id: '2', name: 'Afternoon', code: 'A', color: '#f59e0b', startTime: '14:00', endTime: '22:00' },
   { id: '3', name: 'Night', code: 'N', color: '#6366f1', startTime: '22:00', endTime: '06:00' },
-  { id: '4', name: 'Off', code: 'O', color: '#94a3b8', startTime: '', endTime: '' },
 ];
 
 // Helper to get namespaced keys
@@ -35,7 +34,7 @@ export const storageService = {
   saveAssignment: (userId: string, assignment: DayAssignment) => {
     const assignments = storageService.getAssignments(userId);
     assignments[assignment.dateStr] = assignment;
-    
+
     const keys = getKeys(userId);
     localStorage.setItem(keys.ASSIGNMENTS, JSON.stringify(assignments));
   },
@@ -46,11 +45,11 @@ export const storageService = {
     newAssignments.forEach(a => {
       assignments[a.dateStr] = { ...assignments[a.dateStr], ...a };
     });
-    
+
     const keys = getKeys(userId);
     localStorage.setItem(keys.ASSIGNMENTS, JSON.stringify(assignments));
   },
-  
+
   clearData: (userId: string) => {
     const keys = getKeys(userId);
     localStorage.removeItem(keys.SHIFTS);

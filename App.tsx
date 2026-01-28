@@ -60,6 +60,7 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingShift, setEditingShift] = useState<ShiftType | null>(null); // For edit modal
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [profileId, setProfileId] = useState<string | null>(null);
 
   // 1. Initialize Auth
   useEffect(() => {
@@ -89,7 +90,7 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Load Data when Session Changes
+  // 2. Load Data and Resolve Profile when Session Changes
   useEffect(() => {
     if (session?.user) {
       const userId = session.user.id;
@@ -100,9 +101,36 @@ const App: React.FC = () => {
       if (loadedShifts.length > 0 && !selectedShiftTypeId) {
         setSelectedShiftTypeId(loadedShifts[0].id);
       }
+
+      // Resolve Profile ID for DB sync
+      const resolveProfile = async () => {
+        if (localStorage.getItem('shifter_guest_mode') === 'true') return;
+
+        // Try to find existing profile
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        if (profiles) {
+          setProfileId(profiles.id);
+        } else {
+          // Create a default profile if not found
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([{ user_id: userId, name: session.user.user_metadata?.full_name || 'My Profile' }])
+            .select()
+            .single();
+
+          if (newProfile) setProfileId(newProfile.id);
+        }
+      };
+      resolveProfile();
     } else {
       setShiftTypes([]);
       setAssignments({});
+      setProfileId(null);
     }
   }, [session]);
 
@@ -166,7 +194,19 @@ const App: React.FC = () => {
       note: assignments[key]?.note
     };
     storageService.saveAssignment(session.user.id, newAssignment);
-  }, [selectedShiftTypeId, assignments, session]);
+
+    // Database Sync: Upsert to 'days_assignments'
+    if (profileId && localStorage.getItem('shifter_guest_mode') !== 'true') {
+      supabase.from('days_assignments').upsert({
+        profile_id: profileId,
+        date: key,
+        shift_type_id: selectedShiftTypeId,
+        note: assignments[key]?.note
+      }, { onConflict: 'profile_id,date' }).then(({ error }) => {
+        if (error) console.error('DB Sync Error:', error.message);
+      });
+    }
+  }, [selectedShiftTypeId, assignments, session, profileId]);
 
   const handleSignOut = async () => {
     if (localStorage.getItem('shifter_guest_mode') === 'true') {
@@ -201,8 +241,16 @@ const App: React.FC = () => {
     return <LoginScreen onGuestLogin={handleGuestLogin} />;
   }
 
+  const activeShiftColor = shiftTypes.find(s => s.id === selectedShiftTypeId)?.color || '';
+
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden app" data-theme={theme}>
+    <div
+      className="h-full flex flex-col bg-white overflow-hidden app"
+      data-theme={theme}
+      style={{
+        cursor: selectedShiftTypeId ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' style='fill:${activeShiftColor.replace('#', '%23')} opacity:0.8;'><circle cx='16' cy='16' r='12'/></svg>") 16 16, pointer` : 'default'
+      }}
+    >
       {/* Sidebar Navigation */}
       <Sidebar
         isOpen={isMenuOpen}
