@@ -113,13 +113,29 @@ export const Calendar: React.FC<Props> = ({
               return (
                 <motion.div
                   key={dateKey}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className={`
-                    relative border-r border-b border-slate-100 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
-                    min-h-[80px] md:min-h-0
-                    ${cellBg}
-                    hover:bg-white hover:z-20 hover:shadow-xl
+                    relative flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
+                    m-1.5 md:m-2.5 rounded-2xl md:rounded-[1.8rem]
+                    min-h-[85px] md:min-h-0
+                    ${isToday ? 'bg-indigo-50/30' : (isHoliday ? 'bg-rose-50/40' : (isWeekend ? 'bg-slate-100/50' : 'bg-white'))}
+                    /* EXTRUDED BEZEL EFFECT */
+                    shadow-[
+                      8px_8px_16px_rgba(0,0,0,0.06),
+                      -8px_-8px_16px_rgba(255,255,255,0.9),
+                      inset_0_0_0_1px_rgba(255,255,255,0.5)
+                    ]
+                    hover:shadow-[
+                      12px_12px_24px_rgba(0,0,0,0.08),
+                      -12px_-12px_24px_rgba(255,255,255,1),
+                      inset_0_0_0_1px_rgba(79,70,229,0.1)
+                    ]
+                    active:shadow-[
+                      inset_4px_4px_8px_rgba(0,0,0,0.05),
+                      inset_-4px_-4px_8px_rgba(255,255,255,0.8)
+                    ]
+                    active:scale-[0.98]
                   `}
                   onPointerDown={(e) => {
                     e.preventDefault();
@@ -127,21 +143,24 @@ export const Calendar: React.FC<Props> = ({
                   }}
                   onPointerEnter={() => handlePointerEnter(date)}
                 >
+                  {/* INNER BEZEL LINE */}
+                  <div className="absolute inset-2 rounded-[1.2rem] border border-slate-100/50 pointer-events-none"></div>
+
                   {/* DAY NUMBER */}
                   <div
                     className={`
-                      absolute top-3 left-4 text-xs md:text-sm font-black transition-all z-10
-                      ${textColors}
+                      absolute top-4 left-5 text-xs md:text-sm font-black transition-all z-10
+                      ${isToday ? 'text-indigo-600' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-slate-400' : 'text-slate-500'))}
                     `}
                   >
                     {date.getDate()}
-                    {isToday && <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mx-auto mt-1 shadow-sm"></div>}
+                    {isToday && <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mx-auto mt-1 shadow-[0_0_10px_rgba(79,70,229,0.4)]"></div>}
                   </div>
 
                   {/* HOLIDAY LABEL */}
                   {isHoliday && (
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-rose-500 rounded-md shadow-sm z-20">
-                      <span className="text-[6px] md:text-[8px] font-black text-white uppercase whitespace-nowrap">
+                    <div className="absolute top-3 right-3 px-2 py-1 bg-rose-500 rounded-lg shadow-lg shadow-rose-200 z-20">
+                      <span className="text-[7px] md:text-[9px] font-black text-white uppercase whitespace-nowrap">
                         {holiday.name}
                       </span>
                     </div>
@@ -152,21 +171,26 @@ export const Calendar: React.FC<Props> = ({
                     {shift ? (
                       <motion.div
                         key={shift.id}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        initial={{ scale: 0.8, opacity: 0, y: 5 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         whileHover={{ scale: 1.05 }}
-                        className="w-[85%] h-[75%] rounded-2xl flex flex-col items-center justify-center shadow-md relative overflow-hidden"
-                        style={{ backgroundColor: shift.color, border: '2px solid white' }}
+                        className="w-[82%] h-[72%] rounded-2xl flex flex-col items-center justify-center shadow-lg relative overflow-hidden"
+                        style={{
+                          backgroundColor: shift.color,
+                          border: '3px solid white',
+                          boxShadow: `0 10px 20px -5px ${shift.color}44`
+                        }}
                       >
-                        <span className="text-sm md:text-2xl font-black text-white drop-shadow-sm">{shift.code}</span>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                        <span className="text-sm md:text-2xl font-black text-white drop-shadow-md tracking-tighter">{shift.code}</span>
                         <div className="flex items-center space-x-1 mt-0.5">
                           <i className="fa-solid fa-clock text-[7px] md:text-[9px] text-white/70"></i>
-                          <span className="text-[8px] md:text-[10px] text-white font-bold">{shift.startTime}</span>
+                          <span className="text-[8px] md:text-[10px] text-white font-black">{shift.startTime}</span>
                         </div>
                       </motion.div>
                     ) : (
-                      <div className="w-full h-full opacity-0 group-hover:opacity-10 transition-opacity bg-indigo-500 rounded-2xl" />
+                      <div className="w-full h-full opacity-0 group-hover:opacity-5 transition-opacity bg-indigo-500 rounded-2xl" />
                     )}
                   </AnimatePresence>
                 </motion.div>
