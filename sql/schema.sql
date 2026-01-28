@@ -12,6 +12,7 @@ CREATE TABLE profiles (
 
 CREATE TABLE shift_types (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   company TEXT,
   name TEXT NOT NULL,
   color VARCHAR(7) NOT NULL DEFAULT '#3B82F6',
@@ -38,9 +39,11 @@ CREATE TABLE days_assignments (
 
 CREATE TABLE holidays (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   country_code VARCHAR(2) NOT NULL,
   date DATE NOT NULL,
-  name TEXT
+  name TEXT,
+  UNIQUE(profile_id, date)
 );
 
 CREATE TABLE notes (

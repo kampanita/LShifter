@@ -105,7 +105,20 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         setLoading(true);
         setErrorNotice(null);
         try {
-            const { data: res, error } = await supabase.from(tableName).select('*').limit(100);
+            // First, get the profile_id for this user to filter accurately
+            const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+            const pid = profile?.id;
+
+            let query = supabase.from(tableName).select('*').limit(100);
+
+            // Apply isolation if not the profiles table itself
+            if (tableName !== 'profiles' && pid) {
+                query = query.eq('profile_id', pid);
+            } else if (tableName === 'profiles') {
+                query = query.eq('user_id', userId);
+            }
+
+            const { data: res, error } = await query;
             if (error) throw error;
             setData(res || []);
         } catch (err: any) {
@@ -146,6 +159,14 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         }
 
         try {
+            // Get profile_id to ensure ownership
+            const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+            const pid = profile?.id;
+
+            if (tableName !== 'profiles' && pid) {
+                payload.profile_id = pid;
+            }
+
             if (editingItem.id) {
                 const { error } = await supabase.from(tableName).update(payload).eq('id', editingItem.id);
                 if (error) throw error;
@@ -163,14 +184,16 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
     const handleBulkImport = async (holidays: { date: string, name: string }[]) => {
         try {
             setLoading(true);
+            const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+            const pid = profile?.id;
+
             const payload = holidays.map(h => ({
                 date: h.date,
                 name: h.name,
-                country_code: 'ES'
+                country_code: 'ES',
+                profile_id: pid
             }));
 
-            // Upsert or insert (holidays table might not have unique constraint on date, 
-            // but for simplicity we insert or can check for duplicates)
             const { error } = await supabase.from('holidays').insert(payload);
             if (error) throw error;
 

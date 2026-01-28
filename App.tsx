@@ -53,7 +53,7 @@ function App() {
   useEffect(() => {
     if (session) {
       const fetchShifts = async () => {
-        const { data, error } = await supabase.from('shift_types').select('*').order('name');
+        const { data, error } = await supabase.from('shift_types').select('*').eq('profile_id', profileId).order('name');
         if (data) {
           const mapped: ShiftType[] = data.map((s: any) => ({
             id: s.id,
@@ -69,7 +69,7 @@ function App() {
       };
 
       const fetchHolidays = async () => {
-        const { data } = await supabase.from('holidays').select('*');
+        const { data } = await supabase.from('holidays').select('*').eq('profile_id', profileId);
         if (data) {
           const mapped: Record<string, Holiday> = {};
           data.forEach((h: any) => {
@@ -79,8 +79,10 @@ function App() {
         }
       };
 
-      fetchShifts();
-      fetchHolidays();
+      if (profileId) {
+        fetchShifts();
+        fetchHolidays();
+      }
 
       // Resolve Profile ID for DB sync and Sync Meta
       const resolveProfile = async () => {
