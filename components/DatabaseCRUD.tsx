@@ -47,6 +47,22 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title }) => {
         delete itemToSave.created_at;
         delete itemToSave.updated_at;
 
+        // Basic client-side validation: ensure required columns per table are filled
+        const requiredMap: Record<string, string[]> = {
+          profiles: ['name'],
+          shift_types: ['name'],
+          days_assignments: ['date'],
+          holidays: ['country_code', 'date'],
+          notes: []
+        };
+        const requiredCols = requiredMap[tableName] ?? [];
+        for (const col of requiredCols) {
+          if (itemToSave[col] === undefined || itemToSave[col] === null || itemToSave[col] === '') {
+            alert(`El campo '${col}' es obligatorio`);
+            return;
+          }
+        }
+
         if (id) {
             const { error } = await supabase.from(tableName).update(itemToSave).eq('id', id);
             if (error) alert(error.message);
@@ -118,8 +134,9 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title }) => {
                                                 type="text"
                                                 placeholder={col}
                                                 className="w-full px-2 py-1 border border-slate-200 rounded text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
-                                                value={newItem[col] || ''}
+                                                value={newItem[col] ?? ''}
                                                 onChange={(e) => handleInputChange(e, col)}
+                                                required
                                             />
                                         )}
                                     </td>
