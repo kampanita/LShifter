@@ -83,12 +83,27 @@ function App() {
         }
 
         if (data) {
-          console.log("Holidays data received:", data.length, "rows");
+          console.log("Holidays data received:", data.length, "rows", data);
           const mapped: Record<string, Holiday> = {};
           data.forEach((h: any) => {
-            if (!h.date) return;
-            // Robust normalization: split by T or space
-            const dStr = h.date.split(/[T ]/)[0];
+            if (!h.date) {
+              console.warn("Holiday without date:", h);
+              return;
+            }
+            // Normalize date: handle both DATE and TIMESTAMP formats
+            // PostgreSQL DATE type returns 'YYYY-MM-DD'
+            // TIMESTAMP returns 'YYYY-MM-DDTHH:MM:SS'
+            let dStr: string;
+            if (typeof h.date === 'string') {
+              dStr = h.date.split(/[T ]/)[0];
+            } else if (h.date instanceof Date) {
+              dStr = formatDateKey(h.date);
+            } else {
+              console.warn("Unexpected date format:", h.date);
+              return;
+            }
+
+            console.log(`Mapping holiday: ${h.name} on ${dStr}`);
             mapped[dStr] = {
               id: h.id,
               date: dStr,
@@ -96,6 +111,7 @@ function App() {
               country_code: h.country_code
             };
           });
+          console.log("Final holidays object:", mapped);
           setHolidays(mapped);
         }
       } catch (err) {
@@ -137,7 +153,7 @@ function App() {
     if (userId) {
       setAssignments(storageService.getAssignments(userId));
     }
-  }, [session, userId, profileId, currentView]); // Added profileId as dependency
+  }, [session, userId, profileId]); // Removed currentView from dependencies
 
   const handlePaint = useCallback((date: Date) => {
     if (!session?.user || !selectedShiftTypeId) return;
