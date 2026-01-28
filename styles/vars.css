@@ -1,0 +1,17 @@
+:root {
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --primary: #4F46E5;
+  --accent: #10B981;
+  --holiday: #F87171;
+}
+
+[data-theme="dark"] {
+  --bg: #0f141e;
+  --surface: #1f2a38;
+  --text: #e5e7eb;
+  --muted: #a3a3a3;
+  --primary: #6366f1;
+}

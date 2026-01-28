@@ -1,0 +1,5 @@
+{
+  "name": "ShiftPlanner PWA",
+  "description": "A comprehensive shift planning application allowing users to paint shifts onto a calendar, manage shift types, and track work schedules. Features offline-first local persistence designed to scale to Supabase.",
+  "requestFramePermissions": []
+}
