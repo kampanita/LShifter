@@ -264,7 +264,7 @@ function App() {
         <BezelFrame className="flex-1">
 
           {currentView === 'calendar' && (
-            <>
+            <div className="absolute inset-0 flex flex-col">
               <header className="px-6 py-4 glass-morphism border-b border-slate-100 flex items-center justify-between z-30 shrink-0 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent"></div>
                 <div className="flex items-center space-x-3">
@@ -301,80 +301,90 @@ function App() {
                 </div>
               </header>
 
-              <Calendar
-                currentDate={currentDate}
-                assignments={assignments}
-                shiftTypes={shiftTypes}
-                holidays={holidays}
-                selectedShiftTypeId={selectedShiftTypeId}
-                onPaint={handlePaint}
-                isPainting={isPainting}
-                setIsPainting={setIsPainting}
-              />
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex flex-col min-h-full">
+                  <div className="flex-1">
+                    <Calendar
+                      currentDate={currentDate}
+                      assignments={assignments}
+                      shiftTypes={shiftTypes}
+                      holidays={holidays}
+                      selectedShiftTypeId={selectedShiftTypeId}
+                      onPaint={handlePaint}
+                      isPainting={isPainting}
+                      setIsPainting={setIsPainting}
+                    />
+                  </div>
 
-              <ShiftPalette
-                shiftTypes={shiftTypes}
-                selectedId={selectedShiftTypeId}
-                onSelect={setSelectedShiftTypeId}
-                onEdit={() => setCurrentView('db_shift_types')}
-              />
-            </>
-          )}
-
-          {currentView === 'stats' && (
-            <div className="absolute inset-0 flex flex-col">
-              <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
-                <button
-                  onClick={() => setIsMenuOpen(true)}
-                  className="w-10 h-10 -ml-2 mr-4 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-all"
-                >
-                  <i className="fa-solid fa-bars-staggered text-xl"></i>
-                </button>
-                <h1 className="text-xl font-bold text-slate-800">Estadísticas</h1>
-              </header>
-              <div className="flex-1 relative">
-                <StatisticsView
-                  currentDate={currentDate}
-                  assignments={assignments}
-                  shiftTypes={shiftTypes}
-                  holidays={holidays}
-                />
+                  <ShiftPalette
+                    shiftTypes={shiftTypes}
+                    selectedId={selectedShiftTypeId}
+                    onSelect={setSelectedShiftTypeId}
+                    onEdit={() => setCurrentView('db_shift_types')}
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          {/* CRUD VIEWS with Navigation Header */}
-          {[
-            { id: 'db_profiles', table: 'profiles', title: 'Profiles Management' },
-            { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
-            { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
-          ].map((view) => currentView === view.id && (
-            <div key={view.id} className="absolute inset-0 flex flex-col">
-              <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
-                <button
-                  onClick={() => setIsMenuOpen(true)}
-                  className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-                >
-                  <i className="fa-solid fa-bars text-lg"></i>
-                </button>
-                <h1 className="text-lg font-bold text-slate-800">{view.title}</h1>
-              </header>
-              <DatabaseCRUD tableName={view.table} title={view.title} userId={session.user.id} />
-            </div>
-          ))}
-        </BezelFrame>
-      </main>
 
-      {isMonthPickerOpen && (
-        <MonthPicker
-          isOpen={isMonthPickerOpen}
-          onClose={() => setIsMonthPickerOpen(false)}
-          currentDate={currentDate}
-          onChange={setCurrentDate}
-        />
-      )}
-    </div>
+        {currentView === 'stats' && (
+          <div className="absolute inset-0 flex flex-col">
+            <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="w-10 h-10 -ml-2 mr-4 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-all"
+              >
+                <i className="fa-solid fa-bars-staggered text-xl"></i>
+              </button>
+              <h1 className="text-xl font-bold text-slate-800">Estadísticas</h1>
+            </header>
+            <div className="flex-1 relative">
+              <StatisticsView
+                currentDate={currentDate}
+                assignments={assignments}
+                shiftTypes={shiftTypes}
+                holidays={holidays}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* CRUD VIEWS with Navigation Header */}
+        {[
+          { id: 'db_profiles', table: 'profiles', title: 'Profiles Management' },
+          { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
+          { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
+        ].map((view) => currentView === view.id && (
+          <div key={view.id} className="absolute inset-0 flex flex-col">
+            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+              >
+                <i className="fa-solid fa-bars text-lg"></i>
+              </button>
+              <h1 className="text-lg font-bold text-slate-800">{view.title}</h1>
+            </header>
+            <DatabaseCRUD tableName={view.table} title={view.title} userId={session.user.id} />
+          </div>
+        ))}
+      </BezelFrame>
+    </main>
+
+      {
+    isMonthPickerOpen && (
+      <MonthPicker
+        isOpen={isMonthPickerOpen}
+        onClose={() => setIsMonthPickerOpen(false)}
+        currentDate={currentDate}
+        onChange={setCurrentDate}
+      />
+    )
+  }
+    </div >
   );
 }
 
 export default App;
+

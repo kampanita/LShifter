@@ -51,8 +51,8 @@ export const Calendar: React.FC<Props> = ({
   };
 
   return (
-    <div className="absolute inset-0 overflow-y-auto bg-[#F1F5F9] select-none">
-      <div className="p-2 md:p-8 min-h-full flex flex-col">
+    <div className="flex-1 flex flex-col bg-[#F1F5F9] select-none">
+      <div className="p-2 md:p-8 flex-1 flex flex-col">
         {/* RESTORED DARK PANEL INSIDE LIGHT BACKGROUND */}
         <div className="flex-1 flex flex-col bg-[#0b121e] rounded-[1.2rem] md:rounded-[2rem] border border-[#1e293b] shadow-2xl overflow-hidden relative">
 
