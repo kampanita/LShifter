@@ -68,41 +68,51 @@ function App() {
     };
 
     const fetchHolidays = async (pId: string) => {
-      const { data } = await supabase.from('holidays').select('*').eq('profile_id', pId);
+      console.log("Fetching holidays for profile:", pId);
+      const { data, error } = await supabase.from('holidays').select('*').eq('profile_id', pId);
+      if (error) {
+        console.error("Error fetching holidays:", error);
+        return;
+      }
+
       if (data) {
+        console.log("Holidays data received:", data.length, "rows");
         const mapped: Record<string, Holiday> = {};
         data.forEach((h: any) => {
-          mapped[h.date] = { date: h.date, name: h.name, country_code: h.country_code };
+          // Normalize date: ensure it's YYYY-MM-DD
+          const dStr = h.date.split('T')[0];
+          mapped[dStr] = { date: dStr, name: h.name, country_code: h.country_code };
         });
         setHolidays(mapped);
       }
     };
 
     const resolveProfile = async () => {
-      if (!session?.user) return;
-      if (localStorage.getItem('shifter_guest_mode') === 'true') return;
+      if (!session?.user || !userId) return;
 
-      const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
+      try {
+        const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: userId,
-          name: fullName
-        }, { onConflict: 'user_id' })
-        .select()
-        .single();
+        // Upsert profile and get its ID
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .upsert({ user_id: userId, name: fullName }, { onConflict: 'user_id' })
+          .select()
+          .single();
 
-      if (profile) {
-        setProfileId(profile.id);
-        fetchShifts(profile.id);
-        fetchHolidays(profile.id);
-      } else if (error) {
-        console.error('Profile sync error:', error.message);
+        if (error) throw error;
+
+        if (profile) {
+          setProfileId(profile.id);
+          fetchShifts(profile.id);
+          fetchHolidays(profile.id);
+        }
+      } catch (err) {
+        console.error('Profile resolution failed:', err);
       }
     };
 
-    if (session) {
+    if (session && userId) {
       resolveProfile();
     } else {
       setShiftTypes(storageService.getShiftTypes());

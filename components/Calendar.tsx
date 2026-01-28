@@ -129,11 +129,11 @@ export const Calendar: React.FC<Props> = ({
                   {isToday && <div className="w-1 h-1 bg-indigo-600 rounded-full mx-auto mt-0.5 animate-bounce"></div>}
                 </div>
 
-                {/* HOLIDAY RIBBON - Scaled for mobile */}
+                {/* HOLIDAY RIBBON - Premium 3D Effect */}
                 {isHoliday && (
-                  <div className="absolute top-0 right-0 overflow-hidden w-8 md:w-16 h-8 md:h-16 pointer-events-none">
-                    <div className="absolute top-1 md:top-3 -right-4 md:-right-5 w-16 md:w-24 bg-rose-600 text-white text-[5px] md:text-[8px] font-black uppercase tracking-widest text-center py-0.5 md:py-1 rotate-45 shadow-[0_1px_2px_rgba(0,0,0,0.2)] border-b border-white/20">
-                      {holiday.name?.substring(0, 8)}
+                  <div className="absolute top-0 right-0 overflow-hidden w-10 md:w-20 h-10 md:h-20 pointer-events-none z-20">
+                    <div className="absolute top-1.5 md:top-4 -right-5 md:-right-7 w-20 md:w-32 bg-gradient-to-r from-rose-500 to-rose-700 text-white text-[5px] md:text-[9px] font-black uppercase tracking-widest text-center py-0.5 md:py-1.5 rotate-45 shadow-[0_2px_4px_rgba(0,0,0,0.3)] border-y border-rose-400/30">
+                      {holiday.name?.substring(0, 10)}
                     </div>
                   </div>
                 )}
