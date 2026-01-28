@@ -81,48 +81,47 @@ export const Sidebar: React.FC<Props> = ({
             </button>
 
             <div className="pt-4 mt-4 border-t border-slate-100">
-              <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Database Management</p>
-            <div className="space-y-2">
-              <button onClick={() => setDbTablesOpen(!dbTablesOpen)} className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-slate-700 hover:bg-slate-50">
-                <span className="flex items-center space-x-3">
-                  <i className="fa-solid fa-database w-5 text-center text-xs"></i>
-                  <span className="text-sm">Database Tables</span>
-                </span>
-                <i className={`fa-solid ${dbTablesOpen ? 'fa-chevron-down' : 'fa-chevron-right'}`}></i>
-              </button>
-              {dbTablesOpen && (
-                <div className="pl-6 space-y-2">
-                  <button onClick={() => { onChangeView('db_profiles'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_profiles' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <i className="fa-solid fa-users w-5 text-center text-xs"></i>
-                    <span className="text-sm">Profiles</span>
-                  </button>
-                  <button onClick={() => { onChangeView('db_shift_types'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_shift_types' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <i className="fa-solid fa-list w-5 text-center text-xs"></i>
-                    <span className="text-sm">Shift Types</span>
-                  </button>
-                  <button onClick={() => { onChangeView('db_days_assignments'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_days_assignments' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <i className="fa-solid fa-calendar-check w-5 text-center text-xs"></i>
-                    <span className="text-sm">Assignments</span>
-                  </button>
-                  <button onClick={() => { onChangeView('db_holidays'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_holidays' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <i className="fa-solid fa-umbrella-beach w-5 text-center text-xs"></i>
-                    <span className="text-sm">Holidays</span>
-                  </button>
-                  <button onClick={() => { onChangeView('db_notes'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_notes' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
-                    <i className="fa-solid fa-sticky-note w-5 text-center text-xs"></i>
-                    <span className="text-sm">Notes</span>
-                  </button>
-                </div>
-              )}
-            </div>
+              <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Settings & Data</p>
 
-              <button
-                onClick={() => { onChangeView('db_tables'); onClose(); }}
-                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_tables' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <i className="fa-solid fa-table w-5 text-center text-xs"></i>
-                <span className="text-sm">Tables (All)</span>
-              </button>
+              <div className="space-y-1">
+                <button
+                  onClick={() => setDbTablesOpen(!dbTablesOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors group"
+                >
+                  <span className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                      <i className="fa-solid fa-database text-xs"></i>
+                    </div>
+                    <span className="text-sm font-medium">Database Tables</span>
+                  </span>
+                  <i className={`fa-solid ${dbTablesOpen ? 'fa-chevron-down' : 'fa-chevron-right'} text-[10px] text-slate-300`}></i>
+                </button>
+
+                {dbTablesOpen && (
+                  <div className="pl-4 pr-2 py-1 space-y-1 animate-fade-in">
+                    <button onClick={() => { onChangeView('db_tables'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_tables' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <i className="fa-solid fa-grip w-4 text-center"></i>
+                      <span>Overview (All)</span>
+                    </button>
+                    <button onClick={() => { onChangeView('db_profiles'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_profiles' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <i className="fa-solid fa-users w-4 text-center"></i>
+                      <span>Profiles</span>
+                    </button>
+                    <button onClick={() => { onChangeView('db_shift_types'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_shift_types' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <i className="fa-solid fa-tags w-4 text-center"></i>
+                      <span>Shift Types Table</span>
+                    </button>
+                    <button onClick={() => { onChangeView('db_days_assignments'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_days_assignments' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <i className="fa-solid fa-calendar-alt w-4 text-center"></i>
+                      <span>Assignments</span>
+                    </button>
+                    <button onClick={() => { onChangeView('db_holidays'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_holidays' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
+                      <i className="fa-solid fa-umbrella-beach w-4 text-center"></i>
+                      <span>Holidays</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
 
@@ -138,14 +137,14 @@ export const Sidebar: React.FC<Props> = ({
             <p className="text-center text-[10px] text-slate-300 mt-4">
               Shifter PWA v1.1.0
             </p>
-              </div>
-            </div>
-            <div className="pt-4 pb-4 border-t border-slate-100 px-4">
-              <p className="px-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Look & Feel</p>
-              <div className="px-0 pb-2">
-                <ThemeSwitcher current={theme ?? 'light'} onChange={onChangeTheme ?? (() => {})} />
-              </div>
-            </div>
+          </div>
+        </div>
+        <div className="pt-4 pb-4 border-t border-slate-100 px-4">
+          <p className="px-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Look & Feel</p>
+          <div className="px-0 pb-2">
+            <ThemeSwitcher current={theme ?? 'light'} onChange={onChangeTheme ?? (() => { })} />
+          </div>
+        </div>
       </div>
     </>
   );

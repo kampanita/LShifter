@@ -307,12 +307,42 @@ const App: React.FC = () => {
           </>
         )}
 
-        {currentView === 'db_profiles' && <DatabaseCRUD tableName="profiles" title="Profiles Management" />}
-        {currentView === 'db_shift_types' && <DatabaseCRUD tableName="shift_types" title="Shift Types (Database)" />}
-        {currentView === 'db_days_assignments' && <DatabaseCRUD tableName="days_assignments" title="Assignments Master" />}
-        {currentView === 'db_holidays' && <DatabaseCRUD tableName="holidays" title="Holidays Table" />}
-        {currentView === 'db_notes' && <DatabaseCRUD tableName="notes" title="Raw Notes" />}
-        {currentView === 'db_tables' && <TablesOverview onBack={() => setCurrentView('calendar')} />}
+        {/* CRUD VIEWS with Navigation Header */}
+        {[
+          { id: 'db_profiles', table: 'profiles', title: 'Profiles Management' },
+          { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types (SQL)' },
+          { id: 'db_days_assignments', table: 'days_assignments', title: 'Assignments Master' },
+          { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
+          { id: 'db_notes', table: 'notes', title: 'Raw Notes' }
+        ].map((view) => currentView === view.id && (
+          <div key={view.id} className="flex-1 flex flex-col h-full overflow-hidden">
+            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+              >
+                <i className="fa-solid fa-bars text-lg"></i>
+              </button>
+              <h1 className="text-lg font-bold text-slate-800">{view.title}</h1>
+            </header>
+            <DatabaseCRUD tableName={view.table} title={view.title} userId={session.user.id} />
+          </div>
+        ))}
+
+        {currentView === 'db_tables' && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+              >
+                <i className="fa-solid fa-bars text-lg"></i>
+              </button>
+              <h1 className="text-lg font-bold text-slate-800">Database Hub</h1>
+            </header>
+            <TablesOverview onBack={() => setCurrentView('calendar')} userId={session.user.id} />
+          </div>
+        )}
       </div>
 
       {/* Modals are Global */}
