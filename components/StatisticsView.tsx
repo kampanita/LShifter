@@ -68,7 +68,7 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
     const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
 
     return (
-        <div className="flex-1 flex flex-col bg-[#F8FAFC] overflow-y-auto p-4 md:p-8 space-y-6 md:space-y-8 min-h-0 [scrollbar-gutter:stable] overscroll-contain">
+        <div className="flex-1 overflow-y-auto h-full p-4 md:p-8 space-y-6 md:space-y-8 [scrollbar-gutter:stable] overscroll-contain touch-pan-y">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
