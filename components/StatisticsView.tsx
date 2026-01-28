@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ShiftType, DayAssignment, Holiday } from '../types';
 import { getDaysInMonth, formatDateKey } from '../helpers';
 
@@ -9,17 +9,21 @@ interface Props {
     holidays: Record<string, Holiday>;
 }
 
-export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shiftTypes, holidays }) => {
-    const stats = useMemo(() => {
-        const days = getDaysInMonth(currentDate);
+export const StatisticsView: React.FC<Props> = ({ currentDate: initialDate, assignments, shiftTypes, holidays }) => {
+    const [viewDate, setViewDate] = useState(initialDate);
+    const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
 
+    // Sync if parent updates, but allow internal navigation
+    useEffect(() => {
+        setViewDate(initialDate);
+    }, [initialDate]);
+
+    const calculateStats = (days: Date[]) => {
         let totalHours = 0;
         let normalHours = 0;
         let specialHours = 0;
-
         let normalDaysCount = 0;
         let specialDaysCount = 0;
-
         let shiftStats: Record<string, { count: number; hours: number }> = {};
 
         days.forEach(day => {
@@ -33,11 +37,12 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
                     const dayOfWeek = day.getDay();
                     const isHoliday = !!holidays[key];
                     const isSunday = dayOfWeek === 0;
-                    const isSpecial = isHoliday || isSunday || dayOfWeek === 6; // Sunday, Holiday, Saturday
+                    // Note: User mentioned Sundays and Holidays count as special. Saturdays too based on prev code?
+                    // Previous code: isHoliday || isSunday || dayOfWeek === 6
 
                     totalHours += duration;
 
-                    if (isHoliday || isSunday) {
+                    if (isHoliday || isSunday || dayOfWeek === 6) {
                         specialHours += duration;
                         specialDaysCount++;
                     } else {
@@ -63,113 +68,170 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
             shiftStats,
             totalDays: days.length
         };
-    }, [currentDate, assignments, shiftTypes, holidays]);
+    };
 
-    const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    const stats = useMemo(() => {
+        if (viewMode === 'month') {
+            const days = getDaysInMonth(viewDate);
+            return calculateStats(days);
+        } else {
+            // Year Mode
+            let yearDays: Date[] = [];
+            for (let m = 0; m < 12; m++) {
+                const d = new Date(viewDate.getFullYear(), m, 1);
+                yearDays = [...yearDays, ...getDaysInMonth(d)];
+            }
+            return calculateStats(yearDays);
+        }
+    }, [viewDate, viewMode, assignments, shiftTypes, holidays]);
+
+    // Monthly breakdown for Year View
+    const monthlyBreakdown = useMemo(() => {
+        if (viewMode !== 'year') return [];
+        const months = [];
+        for (let m = 0; m < 12; m++) {
+            const d = new Date(viewDate.getFullYear(), m, 1);
+            const days = getDaysInMonth(d);
+            const mStats = calculateStats(days);
+            months.push({
+                name: d.toLocaleString('es-ES', { month: 'long' }),
+                stats: mStats
+            });
+        }
+        return months;
+    }, [viewDate, viewMode, assignments, shiftTypes, holidays]);
+
+    const handlePrev = () => {
+        if (viewMode === 'month') {
+            setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+        } else {
+            setViewDate(new Date(viewDate.getFullYear() - 1, 0, 1));
+        }
+    };
+
+    const handleNext = () => {
+        if (viewMode === 'month') {
+            setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
+        } else {
+            setViewDate(new Date(viewDate.getFullYear() + 1, 0, 1));
+        }
+    };
+
+    const titleLabel = viewMode === 'month'
+        ? viewDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })
+        : `Año ${viewDate.getFullYear()}`;
+
+    // Calculate max potential hours for charts (approx)
+    // Month: ~160h. Year: ~1920h.
+    const maxHoursRef = viewMode === 'month' ? 160 : 1920;
 
     return (
         <div className="absolute inset-0 overflow-y-auto bg-[#F8FAFC]">
             <div className="p-4 md:p-8 space-y-6 md:space-y-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Análisis de Datos</h2>
-                        <p className="text-slate-500 font-medium capitalize">Resumen de {monthName}</p>
+                {/* Control Header */}
+                <div className="bg-white rounded-[2rem] p-4 md:px-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                        <button
+                            onClick={() => setViewMode('month')}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'month' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            Mensual
+                        </button>
+                        <button
+                            onClick={() => setViewMode('year')}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'year' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            Anual
+                        </button>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:flex items-center gap-3 md:gap-6 bg-white p-4 md:px-6 md:py-4 rounded-[2rem] shadow-sm border border-slate-100">
-                        <div className="text-center md:text-left px-2">
-                            <span className="block text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Total Horas</span>
-                            <span className="text-xl md:text-2xl font-black text-indigo-600 leading-none">{stats.totalHours.toFixed(1)}h</span>
-                        </div>
-                        <div className="hidden md:block w-px h-10 bg-slate-100"></div>
-                        <div className="text-center md:text-left px-2">
-                            <span className="block text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1">Días Trabajados</span>
-                            <span className="text-xl md:text-2xl font-black text-slate-800 leading-none">{stats.normalDaysCount + stats.specialDaysCount}</span>
-                        </div>
+                    <div className="flex items-center space-x-4">
+                        <button onClick={handlePrev} className="w-10 h-10 rounded-xl hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors">
+                            <i className="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <h2 className="text-xl font-black text-slate-800 capitalize min-w-[150px] text-center">
+                            {titleLabel}
+                        </h2>
+                        <button onClick={handleNext} className="w-10 h-10 rounded-xl hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors">
+                            <i className="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
 
-                {/* Main Breakdown Grid */}
+                {/* High Level Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <span className="block text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Total Horas</span>
+                        <span className="text-3xl font-black text-indigo-600">{stats.totalHours.toFixed(1)}</span>
+                        <span className="text-xs font-bold text-slate-400 ml-1">h</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <span className="block text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Jornadas Totales</span>
+                        <span className="text-3xl font-black text-slate-800">{stats.normalDaysCount + stats.specialDaysCount}</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <span className="block text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Especiales / Festivos</span>
+                        <span className="text-3xl font-black text-rose-500">{stats.specialDaysCount}</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <span className="block text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">Horas Normales</span>
+                        <span className="text-3xl font-black text-emerald-500">{stats.normalHours.toFixed(1)}</span>
+                    </div>
+                </div>
+
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-
-                    {/* TABULATED DATA - List style */}
+                    {/* Shift Counts */}
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-100">
-                            <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center">
-                                <i className="fa-solid fa-list-check mr-3 text-indigo-500"></i>
-                                Resumen Tabulado
-                            </h3>
+                        {viewMode === 'year' && (
+                            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-100">
+                                <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center">
+                                    <i className="fa-solid fa-calendar-days mr-3 text-indigo-500"></i>
+                                    Desglose Mensual
+                                </h3>
+                                <div className="space-y-1">
+                                    {monthlyBreakdown.map((m, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                                            <span className="text-sm font-bold text-slate-700 capitalize w-32">{m.name}</span>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="border-b border-slate-50">
-                                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Día</th>
-                                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Jornadas</th>
-                                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Horas Totales</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                        <tr className="group">
-                                            <td className="py-4">
-                                                <div className="flex items-center space-x-3">
-                                                    <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                                                    <span className="text-sm font-bold text-slate-700">Días Laborables Normales</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 text-center text-sm font-black text-slate-800">{stats.normalDaysCount}</td>
-                                            <td className="py-4 text-right text-sm font-black text-emerald-600">{stats.normalHours.toFixed(1)}h</td>
-                                        </tr>
-                                        <tr className="group">
-                                            <td className="py-4">
-                                                <div className="flex items-center space-x-3">
-                                                    <div className="w-2 h-2 rounded-full bg-rose-400"></div>
-                                                    <span className="text-sm font-bold text-slate-700">Dom. / Festivos / Especiales</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 text-center text-sm font-black text-slate-800">{stats.specialDaysCount}</td>
-                                            <td className="py-4 text-right text-sm font-black text-rose-600">{stats.specialHours.toFixed(1)}h</td>
-                                        </tr>
-                                        <tr className="bg-slate-50/50">
-                                            <td className="py-4 px-2 text-xs font-black text-slate-400 uppercase">TOTAL MENSUAL</td>
-                                            <td className="py-4 text-center text-sm font-black text-slate-900">{stats.normalDaysCount + stats.specialDaysCount}</td>
-                                            <td className="py-4 text-right text-sm font-black text-indigo-600">{stats.totalHours.toFixed(1)}h</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                            <div className="flex-1 mx-4 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-indigo-500 rounded-full"
+                                                    style={{ width: `${Math.min((m.stats.totalHours / 180) * 100, 100)}%` }} // normalized to ~180h max
+                                                ></div>
+                                            </div>
+
+                                            <div className="text-right w-24">
+                                                <span className="block text-sm font-black text-slate-800">{m.stats.totalHours.toFixed(1)}h</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* TABLE PER SHIFT TYPE */}
                         <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-100">
                             <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center">
                                 <i className="fa-solid fa-tags mr-3 text-indigo-500"></i>
-                                Desglose por Turno
+                                {viewMode === 'year' ? 'Acumulado por Tipo' : 'Desglose por Turno'}
                             </h3>
-
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {shiftTypes.map(shift => {
                                     const shiftStat = stats.shiftStats[shift.id];
                                     if (!shiftStat || shiftStat.count === 0) return null;
 
                                     return (
-                                        <div key={shift.id} className="flex items-center justify-between p-4 rounded-3xl bg-slate-50/50 border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="w-10 h-10 rounded-2xl shadow-sm border-2 border-white flex items-center justify-center text-xs font-black text-white" style={{ backgroundColor: shift.color }}>
+                                        <div key={shift.id} className="flex items-center justify-between p-4 rounded-3xl bg-slate-50/50 border border-slate-100">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black text-white" style={{ backgroundColor: shift.color }}>
                                                     {shift.code}
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-black text-slate-800">{shift.name}</h4>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                                        {shiftStat.count} asignaciones
-                                                    </p>
+                                                    <p className="text-[10px] text-slate-400">{shiftStat.count} asignaciones</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <span className="block text-sm font-black text-slate-800">{shiftStat.hours.toFixed(1)}h</span>
-                                                <span className="text-[9px] font-bold text-slate-300 uppercase">Acumulado</span>
-                                            </div>
+                                            <span className="text-sm font-black text-slate-800">{shiftStat.hours.toFixed(1)}h</span>
                                         </div>
                                     );
                                 })}
@@ -177,63 +239,35 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
                         </div>
                     </div>
 
-                    {/* Charts & Highlights Sidebar */}
+                    {/* Charts Sidebar */}
                     <div className="space-y-6">
-
-                        {/* Circular Chart Placeholder / Simple visualization */}
-                        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center">
-                            <h4 className="w-full text-left text-[10px] font-black text-slate-300 uppercase tracking-widest mb-8">Porcentaje de Jornada</h4>
+                        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-6">% Carga Laboral ({viewMode === 'year' ? 'Anual' : 'Mensual'})</h4>
                             <div className="relative w-40 h-40 flex items-center justify-center">
                                 <svg className="w-full h-full transform -rotate-90">
                                     <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-50" />
                                     <circle
                                         cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="12" fill="transparent"
                                         strokeDasharray={440}
-                                        strokeDashoffset={440 - (440 * (stats.totalHours / 160))} // Assuming 160h is standard month
+                                        strokeDashoffset={440 - (440 * (stats.totalHours / maxHoursRef))}
                                         className="text-indigo-500 transition-all duration-1000"
                                         strokeLinecap="round"
                                     />
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-3xl font-black text-slate-800">{((stats.totalHours / 160) * 100).toFixed(0)}%</span>
-                                    <span className="text-[8px] font-black text-slate-400 uppercase">Carga Laboral</span>
+                                    <span className="text-3xl font-black text-slate-800">{((stats.totalHours / maxHoursRef) * 100).toFixed(0)}%</span>
                                 </div>
                             </div>
+                            <p className="text-xs text-slate-400 mt-4 px-4 font-medium">Basado en un estándar de {maxHoursRef} horas</p>
                         </div>
 
-                        {/* PRESENCE CARD */}
-                        <div className="bg-slate-900 rounded-[2.5rem] p-6 text-white shadow-xl shadow-slate-200 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <i className="fa-solid fa-calendar-check text-6xl"></i>
-                            </div>
-                            <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Presencia Mensual</h4>
-                            <div className="flex items-end justify-between">
-                                <div>
-                                    <span className="text-4xl font-black leading-none">
-                                        {(((stats.normalDaysCount + stats.specialDaysCount) / stats.totalDays) * 100).toFixed(0)}%
-                                    </span>
-                                    <p className="text-sm font-medium text-slate-400 mt-1">Días trabajados</p>
-                                </div>
-                                <div className="flex space-x-1 items-end h-10">
-                                    {Array.from({ length: 7 }).map((_, i) => (
-                                        <div key={i} className="w-1.5 bg-indigo-500/40 rounded-t-sm" style={{ height: `${30 + Math.random() * 70}%` }}></div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-amber-50 rounded-[2rem] p-6 border border-amber-100/50">
-                            <div className="flex items-center space-x-3 mb-3">
-                                <div className="w-8 h-8 rounded-xl bg-amber-200/50 flex items-center justify-center text-amber-700">
-                                    <i className="fa-solid fa-circle-exclamation"></i>
-                                </div>
-                                <span className="text-xs font-black text-amber-900 uppercase tracking-tighter">Nota Informativa</span>
-                            </div>
-                            <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                                Los domingos y festivos registrados se contabilizan como <span className="text-amber-950 font-bold underline decoration-amber-300">Jornadas Especiales</span> a efectos de cálculo de horas extra o nocturnidad.
+                        <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl">
+                            <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Resumen Ejecutivo</h4>
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                En este periodo has acumulado <strong className="text-white">{stats.totalHours.toFixed(1)} horas</strong> de trabajo,
+                                con <strong className="text-emerald-400">{stats.normalDaysCount} jornadas estándar</strong> y <strong className="text-rose-400">{stats.specialDaysCount} jornadas especiales</strong>.
                             </p>
                         </div>
-
                     </div>
                 </div>
             </div>
