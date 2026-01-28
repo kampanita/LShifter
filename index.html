@@ -1,81 +1,89 @@
 <!DOCTYPE html>
+<!-- Deployment Trigger -->
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>ShiftPlanner</title>
-    <meta name="theme-color" content="#4f46e5" />
-    <link rel="manifest" href="manifest.json" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            animation: {
-              'fade-in': 'fadeIn 0.2s ease-out',
-              'scale-in': 'scaleIn 0.2s ease-out',
-              'slide-up': 'slideUp 0.3s ease-out',
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ShiftPlanner</title>
+  <meta name="theme-color" content="#4f46e5" />
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.2s ease-out',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
             },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideUp: {
-                '0%': { transform: 'translateY(10px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-              scaleIn: {
-                '0%': { transform: 'scale(0.9)', opacity: '0' },
-                '100%': { transform: 'scale(1)', opacity: '1' },
-              }
+            slideUp: {
+              '0%': { transform: 'translateY(10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.9)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
             }
           }
         }
       }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <style>
-      /* Disable select for better painting experience */
-      .no-select {
-        user-select: none;
-        -webkit-user-select: none;
-      }
-      /* Hide scrollbar for horizontal shift list */
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      body {
-        overscroll-behavior-y: none;
-        background-color: var(--bg);
-        color: var(--text);
-      }
-    </style>
-    <!-- CSS Vars Inlined for simplicity in this structure -->
-    <style>
-      :root {
-        --bg: #f7f7fb;
-        --surface: #ffffff;
-        --text: #1f2937;
-        --muted: #6b7280;
-        --primary: #4F46E5;
-        --accent: #10B981;
-        --holiday: #F87171;
-      }
-      [data-theme="dark"] {
-        --bg: #0f141e;
-        --surface: #1f2a38;
-        --text: #e5e7eb;
-        --muted: #a3a3a3;
-      }
-    </style>
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    /* Disable select for better painting experience */
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Hide scrollbar for horizontal shift list */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    body {
+      overscroll-behavior-y: none;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+  </style>
+  <!-- CSS Vars Inlined for simplicity in this structure -->
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #4F46E5;
+      --accent: #10B981;
+      --holiday: #F87171;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f141e;
+      --surface: #1f2a38;
+      --text: #e5e7eb;
+      --muted: #a3a3a3;
+    }
+  </style>
 </head>
-  <body class="h-screen w-screen overflow-hidden flex flex-col">
-    <div id="root" class="flex-1 flex flex-col h-full overflow-hidden"></div>
+
+<body class="h-screen w-screen overflow-hidden flex flex-col">
+  <div id="root" class="flex-1 flex flex-col h-full overflow-hidden"></div>
   <script type="module" src="./index.tsx"></script>
 </body>
+
 </html>
