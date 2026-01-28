@@ -70,7 +70,7 @@ export const ShifterLogo: React.FC<{ className?: string }> = ({ className = "w-1
 
 export const BezelFrame: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className = "" }) => {
     return (
-        <div className={`relative p-1 bg-slate-200 rounded-[2.2rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_10px_40px_-10px_rgba(0,0,0,0.2)] ${className}`}>
+        <div className={`relative p-1 bg-slate-200 rounded-[2.2rem] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_10px_40px_-10px_rgba(0,0,0,0.2)] flex flex-col ${className}`}>
             <div className="absolute inset-x-4 top-0 h-px bg-white/60 blur-[1px]"></div>
             <div className="bg-white rounded-[2rem] overflow-hidden flex flex-col h-full ring-1 ring-black/5 shadow-sm">
                 {children}

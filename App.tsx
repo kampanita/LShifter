@@ -322,7 +322,7 @@ function App() {
           )}
 
           {currentView === 'stats' && (
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
                 <button
                   onClick={() => setIsMenuOpen(true)}
@@ -347,7 +347,7 @@ function App() {
             { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
             { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
           ].map((view) => currentView === view.id && (
-            <div key={view.id} className="flex-1 flex flex-col h-full overflow-hidden">
+            <div key={view.id} className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
                 <button
                   onClick={() => setIsMenuOpen(true)}
