@@ -69,17 +69,6 @@ export const Sidebar: React.FC<Props> = ({
               <span>Calendar</span>
             </button>
 
-            <button
-              onClick={() => { onChangeView('admin'); onClose(); }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${currentView === 'admin'
-                ? 'bg-indigo-50 text-indigo-600 font-semibold'
-                : 'text-slate-600 hover:bg-slate-50'
-                }`}
-            >
-              <i className="fa-solid fa-table-list w-5 text-center"></i>
-              <span>Manage Shift Types</span>
-            </button>
-
             <div className="pt-4 mt-4 border-t border-slate-100">
               <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">Settings & Data</p>
 

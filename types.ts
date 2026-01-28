@@ -26,3 +26,10 @@ export interface Profile {
   id: string;
   email: string;
 }
+
+export interface Holiday {
+  id: string;
+  country_code: string;
+  date: string; // YYYY-MM-DD
+  name?: string;
+}

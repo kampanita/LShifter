@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { ShiftType, DayAssignment } from '../types';
+import { ShiftType, DayAssignment, Holiday } from '../types';
 import { getDaysInMonth, getPaddingDays, formatDateKey, isSameDay } from '../helpers';
 
 interface Props {
   currentDate: Date;
   assignments: Record<string, DayAssignment>;
   shiftTypes: ShiftType[];
+  holidays: Record<string, Holiday>;
   selectedShiftTypeId: string | null;
   onPaint: (date: Date) => void;
   isPainting: boolean;
@@ -16,6 +17,7 @@ export const Calendar: React.FC<Props> = ({
   currentDate,
   assignments,
   shiftTypes,
+  holidays,
   selectedShiftTypeId,
   onPaint,
   isPainting,
@@ -53,8 +55,8 @@ export const Calendar: React.FC<Props> = ({
       {/* Week Header */}
       <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
         {daysOfWeek.map((day, index) => (
-          <div 
-            key={day} 
+          <div
+            key={day}
             className={`
               py-2 text-center text-xs font-semibold uppercase tracking-wider
               ${index >= 5 ? 'text-indigo-400' : 'text-slate-500'} 
@@ -67,8 +69,8 @@ export const Calendar: React.FC<Props> = ({
 
       {/* Days Grid */}
       <div className="flex-1 grid grid-cols-7 grid-rows-6 h-full relative"
-           onPointerUp={() => setIsPainting(false)}
-           onPointerLeave={() => setIsPainting(false)}
+        onPointerUp={() => setIsPainting(false)}
+        onPointerLeave={() => setIsPainting(false)}
       >
         {/* Padding Days */}
         {Array.from({ length: paddingDays }).map((_, i) => (
@@ -81,14 +83,17 @@ export const Calendar: React.FC<Props> = ({
           const isToday = isSameDay(date, today);
           const dateKey = formatDateKey(date);
           const hasNote = assignments[dateKey]?.note;
-          
+          const holiday = holidays[dateKey];
+          const isHoliday = !!holiday;
+
           const dayOfWeek = date.getDay(); // 0 is Sun, 6 is Sat
           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-          // Background Logic: Today > Weekend > Weekday
+          // Background Logic: Today > Holiday > Weekend > Weekday
           let bgClass = 'bg-white';
           if (isToday) bgClass = 'bg-indigo-50';
-          else if (isWeekend) bgClass = 'bg-slate-50'; // Slightly darker for weekends
+          else if (isHoliday) bgClass = 'bg-rose-50/50';
+          else if (isWeekend) bgClass = 'bg-slate-50';
 
           return (
             <div
@@ -108,16 +113,23 @@ export const Calendar: React.FC<Props> = ({
               <span
                 className={`
                   absolute top-2 left-2 text-sm font-medium z-10
-                  ${isToday ? 'text-indigo-600' : (isWeekend ? 'text-slate-500' : 'text-slate-400')}
+                  ${isToday ? 'text-indigo-600' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-slate-500' : 'text-slate-400'))}
                   ${shift ? 'text-white drop-shadow-md' : ''}
                 `}
               >
                 {date.getDate()}
               </span>
 
+              {/* Holiday name hint */}
+              {isHoliday && !shift && (
+                <span className="absolute bottom-2 left-2 right-2 text-[8px] font-bold text-rose-400 uppercase tracking-tighter truncate text-center">
+                  {holiday.name || 'Holiday'}
+                </span>
+              )}
+
               {/* Note Indicator */}
               {hasNote && (
-                 <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 border border-white z-10"></div>
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 border border-white z-10"></div>
               )}
 
               {/* Shift Content */}

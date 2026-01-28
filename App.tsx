@@ -9,7 +9,7 @@ import './src/styles/themes.css';
 import { ShiftManager } from './components/ShiftManager';
 import { DatabaseCRUD } from './components/DatabaseCRUD';
 import { TablesOverview } from './components/TablesOverview';
-import { ShiftType, DayAssignment } from './types';
+import { ShiftType, DayAssignment, Holiday } from './types';
 import { storageService } from './services/storage';
 import { formatDateKey } from './helpers';
 import { supabase, signOut } from './src/data/supabaseClient';
@@ -47,7 +47,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
-  const [currentView, setCurrentView] = useState<'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables'>('calendar');
+  const [currentView, setCurrentView] = useState<'calendar' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables'>('calendar');
   const [theme, setTheme] = useState<'light' | 'dark' | 'sunset'>('light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -55,6 +55,7 @@ const App: React.FC = () => {
   const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [assignments, setAssignments] = useState<Record<string, DayAssignment>>({});
   const [selectedShiftTypeId, setSelectedShiftTypeId] = useState<string | null>(null);
+  const [holidays, setHolidays] = useState<Record<string, Holiday>>({});
 
   const [isPainting, setIsPainting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,20 +95,49 @@ const App: React.FC = () => {
   useEffect(() => {
     if (session?.user) {
       const userId = session.user.id;
-      const loadedShifts = storageService.getShiftTypes(userId);
-      setShiftTypes(loadedShifts);
-      setAssignments(storageService.getAssignments(userId));
 
-      if (loadedShifts.length > 0 && !selectedShiftTypeId) {
-        setSelectedShiftTypeId(loadedShifts[0].id);
-      }
+      // Fetch Shift Types from DB
+      const fetchShifts = async () => {
+        const { data, error } = await supabase.from('shift_types').select('*').order('name');
+        if (data) {
+          const mapped: ShiftType[] = data.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            code: s.name.charAt(0).toUpperCase(), // Using first char from name as code if not in DB
+            color: s.color || '#4f46e5',
+            startTime: s.default_start?.substring(0, 5) || '',
+            endTime: s.default_end?.substring(0, 5) || ''
+          }));
+          setShiftTypes(mapped);
+          if (mapped.length > 0 && !selectedShiftTypeId) {
+            setSelectedShiftTypeId(mapped[0].id);
+          }
+        }
+      };
+
+      setAssignments(storageService.getAssignments(userId));
+      fetchShifts();
+
+      // Fetch Holidays from DB
+      const fetchHolidays = async () => {
+        const { data } = await supabase.from('holidays').select('*');
+        if (data) {
+          const holidayMap: Record<string, Holiday> = {};
+          data.forEach((h: Holiday) => {
+            holidayMap[h.date] = h;
+          });
+          setHolidays(holidayMap);
+        }
+      };
+
+      fetchHolidays();
 
       // Resolve Profile ID for DB sync
       const resolveProfile = async () => {
         if (localStorage.getItem('shifter_guest_mode') === 'true') return;
 
         // Try to find existing profile
-        const { data: profiles, error } = await supabase
+        const { data: profiles } = await supabase
           .from('profiles')
           .select('id')
           .eq('user_id', userId)
@@ -117,7 +147,7 @@ const App: React.FC = () => {
           setProfileId(profiles.id);
         } else {
           // Create a default profile if not found
-          const { data: newProfile, error: createError } = await supabase
+          const { data: newProfile } = await supabase
             .from('profiles')
             .insert([{ user_id: userId, name: session.user.user_metadata?.full_name || 'My Profile' }])
             .select()
@@ -132,7 +162,7 @@ const App: React.FC = () => {
       setAssignments({});
       setProfileId(null);
     }
-  }, [session]);
+  }, [session, currentView]); // Refresh when view changes back to calendar
 
   // Persist and apply theme
   useEffect(() => {
@@ -144,36 +174,7 @@ const App: React.FC = () => {
     localStorage.setItem('shifter_theme', theme);
   }, [theme]);
 
-  // CRUD Operations
-  const handleSaveShift = (shiftData: ShiftType) => {
-    if (!session?.user) return;
-
-    let updatedShifts;
-    const exists = shiftTypes.find(s => s.id === shiftData.id);
-
-    if (exists) {
-      updatedShifts = shiftTypes.map(s => s.id === shiftData.id ? shiftData : s);
-    } else {
-      updatedShifts = [...shiftTypes, shiftData];
-    }
-
-    setShiftTypes(updatedShifts);
-    storageService.saveShiftTypes(session.user.id, updatedShifts);
-
-    // If we just created it, select it
-    if (!exists) setSelectedShiftTypeId(shiftData.id);
-  };
-
-  const handleDeleteShift = (id: string) => {
-    if (!session?.user) return;
-    const updatedShifts = shiftTypes.filter(s => s.id !== id);
-    setShiftTypes(updatedShifts);
-    storageService.saveShiftTypes(session.user.id, updatedShifts);
-
-    if (selectedShiftTypeId === id) {
-      setSelectedShiftTypeId(null);
-    }
-  };
+  // Shift management is now handled by the Database Hub (CRUD)
 
   const handlePaint = useCallback((date: Date) => {
     if (!session?.user) return;
@@ -310,6 +311,7 @@ const App: React.FC = () => {
               currentDate={currentDate}
               assignments={assignments}
               shiftTypes={shiftTypes}
+              holidays={holidays}
               selectedShiftTypeId={selectedShiftTypeId}
               onPaint={handlePaint}
               isPainting={isPainting}
@@ -321,39 +323,12 @@ const App: React.FC = () => {
               selectedId={selectedShiftTypeId}
               onSelect={setSelectedShiftTypeId}
               onEdit={() => {
-                setEditingShift(null); // Create mode
-                setIsModalOpen(true);
+                setCurrentView('db_shift_types');
               }}
             />
           </>
         )}
 
-        {/* VIEW: ADMIN / CRUD */}
-        {currentView === 'admin' && (
-          <>
-            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-              >
-                <i className="fa-solid fa-bars text-lg"></i>
-              </button>
-              <h1 className="text-lg font-bold text-slate-800">Manage Data</h1>
-            </header>
-            <ShiftManager
-              shiftTypes={shiftTypes}
-              onCreate={() => {
-                setEditingShift(null);
-                setIsModalOpen(true);
-              }}
-              onEdit={(shift) => {
-                setEditingShift(shift);
-                setIsModalOpen(true);
-              }}
-              onDelete={handleDeleteShift}
-            />
-          </>
-        )}
 
         {/* CRUD VIEWS with Navigation Header */}
         {[
@@ -392,14 +367,6 @@ const App: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Modals are Global */}
-      <EditShiftModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveShift}
-        editingShift={editingShift}
-      />
 
       <DatePickerModal
         isOpen={isDatePickerOpen}
