@@ -5,8 +5,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   session: Session;
-  currentView: 'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables';
-  onChangeView: (view: 'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables') => void;
+  currentView: 'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays';
+  onChangeView: (view: 'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays') => void;
   theme?: 'light' | 'dark' | 'sunset';
   onChangeTheme?: (t: 'light' | 'dark' | 'sunset') => void;
   onSignOut: () => void;
@@ -99,10 +99,6 @@ export const Sidebar: React.FC<Props> = ({
 
                 {dbTablesOpen && (
                   <div className="pl-4 pr-2 py-1 space-y-1 animate-fade-in">
-                    <button onClick={() => { onChangeView('db_tables'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_tables' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
-                      <i className="fa-solid fa-grip w-4 text-center"></i>
-                      <span>Overview (All)</span>
-                    </button>
                     <button onClick={() => { onChangeView('db_profiles'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_profiles' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
                       <i className="fa-solid fa-users w-4 text-center"></i>
                       <span>Profiles</span>

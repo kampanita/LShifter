@@ -11,6 +11,21 @@
 -- 4. Refresca la aplicación web
 -- ============================================
 
+-- PASO 0: Reparar estructura de tabla PROFILES (¡CRÍTICO para el login!)
+-- El error 400 en Chrome viene de aquí: el UPSERT requiere que user_id sea único.
+
+-- 1. Eliminar duplicados si los hay (limpieza)
+DELETE FROM profiles a USING profiles b 
+WHERE a.id < b.id AND a.user_id = b.user_id;
+
+-- 2. Asegurar que la columna user_id sea única
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_user_id_key') THEN
+    ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);
+  END IF;
+END $$;
+
 -- PASO 1: Eliminar políticas existentes si las hay (para evitar errores)
 DROP POLICY IF EXISTS "Users can view holidays" ON holidays;
 DROP POLICY IF EXISTS "Users can insert own holidays" ON holidays;

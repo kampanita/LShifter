@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ShiftType, DayAssignment, Holiday } from '../types';
 import { getDaysInMonth, getPaddingDays, formatDateKey, isSameDay } from '../helpers';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
 interface Props {
   currentDate: Date;
@@ -37,6 +37,30 @@ export const Calendar: React.FC<Props> = ({
   const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const today = new Date();
 
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const rotateX = useTransform(y, [-300, 300], [5, -5]);
+  const rotateY = useTransform(x, [-500, 500], [-5, 5]);
+
+  const springConfig = { damping: 20, stiffness: 100 };
+  const springRotateX = useSpring(rotateX, springConfig);
+  const springRotateY = useSpring(rotateY, springConfig);
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set(event.clientX - centerX);
+    y.set(event.clientY - centerY);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+    setIsPainting(false);
+  };
+
   const handlePointerDown = (date: Date) => {
     setIsPainting(true);
     onPaint(date);
@@ -58,25 +82,46 @@ export const Calendar: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#FDFCFB] overflow-hidden select-none p-2 md:p-8">
-      {/* CALENDAR BODY */}
-      <div className="flex-1 flex flex-col bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden relative">
+    <div
+      className="flex-1 flex flex-col bg-[#FDFCFB] overflow-hidden select-none p-2 md:p-8 perspective-1000"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* 3D SCENE BACKGROUND - SUBTLE GRID */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+      </div>
 
-        {/* TOP DECORATION - Smaller on mobile */}
-        <div className="absolute top-0 left-0 right-0 h-3 md:h-4 bg-slate-100 flex justify-around items-center px-6 md:px-12 z-20">
+      {/* CALENDAR BODY - 3D CONTAINER */}
+      <motion.div
+        style={{
+          rotateX: springRotateX,
+          rotateY: springRotateY,
+          transformStyle: "preserve-3d",
+        }}
+        className="flex-1 flex flex-col bg-white/70 backdrop-blur-xl rounded-[1.5rem] md:rounded-[3rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15),0_0_0_1px_rgba(255,255,255,0.7)] overflow-hidden relative border border-white/40"
+      >
+        {/* LIGHT REFLECTION EFFECT */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-transparent via-white/30 to-white/10 z-30"></div>
+
+        {/* TOP DECORATION - PREMIUM BEZEL */}
+        <div className="absolute top-0 left-0 right-0 h-4 md:h-6 bg-slate-50/50 backdrop-blur-md flex justify-around items-center px-6 md:px-12 z-20 border-b border-white/20">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="w-2 md:w-4 h-2 md:h-4 rounded-full bg-[#FDFCFB] shadow-inner border border-slate-200"></div>
+            <div key={i} className="w-1.5 md:w-3 h-1.5 md:h-3 rounded-full bg-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] border border-slate-200"></div>
           ))}
         </div>
 
-        {/* WEEK HEADER - Reduced padding on mobile */}
-        <div className="grid grid-cols-7 pt-6 md:pt-10 pb-2 md:pb-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+        {/* WEEK HEADER */}
+        <div
+          className="grid grid-cols-7 pt-8 md:pt-12 pb-3 md:pb-5 bg-white/30 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100/50"
+          style={{ transform: "translateZ(30px)" }}
+        >
           {daysOfWeek.map((day, index) => (
             <div
               key={day}
               className={`
-                text-center text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em]
-                ${index >= 5 ? 'text-rose-400' : 'text-slate-400'} 
+                text-center text-[9px] md:text-[11px] font-black uppercase tracking-[0.25em]
+                ${index >= 5 ? 'text-rose-500/80' : 'text-slate-400'} 
               `}
             >
               {day}
@@ -86,13 +131,15 @@ export const Calendar: React.FC<Props> = ({
 
         {/* DAYS GRID */}
         <div
-          className="flex-1 grid grid-cols-7 relative overflow-y-auto hide-scrollbar"
+          className="flex-1 grid grid-cols-7 relative overflow-y-auto hide-scrollbar z-10"
           onPointerUp={() => setIsPainting(false)}
           onPointerLeave={() => setIsPainting(false)}
-          style={{ gridAutoRows: '1fr' }}
+          style={{
+            gridAutoRows: '1fr',
+          }}
         >
           {Array.from({ length: paddingDays }).map((_, i) => (
-            <div key={`padding-${i}`} className="bg-slate-50/30 border-r border-b border-slate-50" />
+            <div key={`padding-${i}`} className="bg-slate-50/20 border-r border-b border-slate-100/30" />
           ))}
 
           <AnimatePresence mode="popLayout">
@@ -103,104 +150,96 @@ export const Calendar: React.FC<Props> = ({
               const holiday = holidays[dateKey];
               const isHoliday = !!holiday;
 
-              // DEBUG: Log first 3 days and any holidays found
-              if (index < 1 || isHoliday) {
-                console.log(`🔍 CALENDAR_RENDER - Day ${date.getDate()}: key="${dateKey}", isHoliday=${isHoliday}, hasData=${!!holidays[dateKey]}`);
-              }
-
               const dayOfWeek = date.getDay();
               const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-              let cellBg = 'bg-transparent';
-              if (isToday) cellBg = 'bg-indigo-100/40';
-              else if (isHoliday) cellBg = 'bg-rose-100/50';
-              else if (isWeekend) cellBg = 'bg-rose-50';
 
               return (
                 <motion.div
                   key={dateKey}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: (index % 7) * 0.05 + Math.floor(index / 7) * 0.02 }}
+                  initial={{ opacity: 0, scale: 0.9, z: -10 }}
+                  animate={{ opacity: 1, scale: 1, z: 0 }}
+                  transition={{ delay: (index % 7) * 0.02 + Math.floor(index / 7) * 0.01 }}
                   className={`
-                    relative border-r border-b border-slate-200/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
-                    min-h-[70px] md:min-h-0
-                    ${cellBg}
-                    hover:bg-white hover:shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]
+                    relative border-r border-b border-slate-100/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group
+                    min-h-[75px] md:min-h-0
+                    ${isToday ? 'bg-indigo-50/60' : (isHoliday ? 'bg-rose-50/40' : (isWeekend ? 'bg-slate-50/30' : 'bg-transparent'))}
+                    hover:bg-white/80 hover:z-20 hover:scale-[1.02] hover:shadow-2xl
                   `}
+                  style={{ transformStyle: "preserve-3d" }}
                   onPointerDown={(e) => {
                     e.preventDefault();
                     handlePointerDown(date);
                   }}
                   onPointerEnter={() => handlePointerEnter(date)}
                 >
-                  {/* DAY NUMBER - Smaller on mobile */}
+                  {/* DAY NUMBER */}
                   <div
                     className={`
-                      absolute top-1.5 md:top-3 left-2 md:left-4 text-xs md:text-sm font-black transition-all z-10
-                      ${isToday ? 'text-indigo-600 scale-110' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-amber-600/70' : 'text-slate-600'))}
-                      ${shift ? 'opacity-40 group-hover:opacity-100' : ''}
+                      absolute top-2 md:top-4 left-3 md:left-5 text-xs md:text-sm font-black transition-all z-10
+                      ${isToday ? 'text-indigo-600' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-slate-400' : 'text-slate-500'))}
                     `}
+                    style={{ transform: "translateZ(20px)" }}
                   >
                     {date.getDate()}
-                    {isToday && <div className="w-1 h-1 bg-indigo-600 rounded-full mx-auto mt-0.5 animate-bounce"></div>}
+                    {isToday && <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="w-1.5 h-1.5 bg-indigo-600 rounded-full mx-auto mt-1 shadow-lg shadow-indigo-300"></motion.div>}
                   </div>
 
-                  {/* HOLIDAY RIBBON - Premium 3D Effect */}
+                  {/* HOLIDAY RIBBON */}
                   {isHoliday && (
                     <motion.div
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      className="absolute top-0 right-0 overflow-hidden w-12 md:w-24 h-12 md:h-24 pointer-events-none z-20"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="absolute top-0 right-0 overflow-hidden w-16 md:w-28 h-16 md:h-28 pointer-events-none z-20"
+                      style={{ transform: "translateZ(40px)" }}
                     >
-                      <div className="absolute top-2 md:top-5 -right-6 md:-right-8 w-24 md:w-36 bg-gradient-to-r from-rose-500 via-rose-600 to-rose-700 text-white text-[6px] md:text-[10px] font-black uppercase tracking-widest text-center py-1 md:py-2 rotate-45 shadow-[0_4px_8px_rgba(0,0,0,0.3)] border-y border-rose-400/30">
+                      <div className="absolute top-4 md:top-7 -right-8 md:-right-10 w-28 md:w-44 bg-gradient-to-r from-rose-500 to-rose-700 text-white text-[7px] md:text-[11px] font-black uppercase tracking-widest text-center py-1.5 md:py-2.5 rotate-45 shadow-xl border-y border-white/20">
                         {holiday.name}
                       </div>
                     </motion.div>
                   )}
 
-                  {/* SHIFT CONTENT - Responsive sizes */}
+                  {/* SHIFT CONTENT */}
                   <AnimatePresence mode="wait">
                     {shift ? (
                       <motion.div
                         key={shift.id}
-                        initial={{ scale: 0, rotate: -10 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        exit={{ scale: 0, rotate: 10 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-[85%] h-[75%] rounded-xl md:rounded-2xl flex flex-col items-center justify-center shadow-lg relative overflow-hidden"
-                        style={{ backgroundColor: shift.color, border: '2px md:border-3 solid white' }}
+                        initial={{ scale: 0, rotateY: 90, z: 0 }}
+                        animate={{ scale: 1, rotateY: 0, z: 50 }}
+                        exit={{ scale: 0, rotateY: -90, z: 0 }}
+                        whileHover={{ scale: 1.08, z: 70 }}
+                        className="w-[88%] h-[80%] rounded-2xl md:rounded-[2rem] flex flex-col items-center justify-center shadow-[0_15px_30px_-5px_rgba(0,0,0,0.2)] relative overflow-hidden active:scale-95 transition-all"
+                        style={{
+                          backgroundColor: shift.color,
+                          border: '2px solid rgba(255,255,255,0.8)',
+                          transformStyle: "preserve-3d"
+                        }}
                       >
-                        <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
-                        <span className="text-sm md:text-2xl font-black text-white drop-shadow-md">{shift.code}</span>
-                        <div className="flex items-center space-x-1 mt-0.5">
-                          <i className="fa-solid fa-clock text-[6px] md:text-[8px] text-white/70"></i>
-                          <span className="text-[7px] md:text-[9px] text-white font-bold tracking-tight">{shift.startTime}</span>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-50"></div>
+                        <span className="text-sm md:text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] tracking-tighter" style={{ transform: "translateZ(20px)" }}>{shift.code}</span>
+                        <div className="flex items-center space-x-1.5 mt-1" style={{ transform: "translateZ(10px)" }}>
+                          <i className="fa-solid fa-clock text-[7px] md:text-[10px] text-white/80"></i>
+                          <span className="text-[8px] md:text-[11px] text-white font-black tracking-tight">{shift.startTime}</span>
                         </div>
-                        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                        {/* 3D SIDE SIDES - CSS Simulation */}
+                        <div className="absolute right-0 top-0 bottom-0 w-2 bg-black/20" style={{ transform: "rotateY(90deg) translateZ(10px)" }}></div>
+                        <div className="absolute left-0 top-0 bottom-0 w-2 bg-white/20" style={{ transform: "rotateY(-90deg) translateZ(10px)" }}></div>
                       </motion.div>
                     ) : (
-                      <div className="w-full h-full opacity-0 group-hover:opacity-10 transition-opacity bg-indigo-500 rounded-xl md:rounded-2xl scale-90" />
+                      <div className="w-full h-full opacity-0 group-hover:opacity-100 group-hover:bg-indigo-50/50 transition-all duration-300" />
                     )}
                   </AnimatePresence>
 
-                  {/* TODAY PULSE */}
-                  {isToday && !shift && (
-                    <div className="absolute inset-2 md:inset-4 rounded-xl md:rounded-3xl border md:border-2 border-indigo-200/50 animate-pulse border-dashed pointer-events-none"></div>
-                  )}
+                  {/* GLOW EFFECT ON HOVER */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-radial-gradient(circle at center, rgba(99,102,241,0.05) 0%, transparent 70%)"></div>
                 </motion.div>
               );
             })}
           </AnimatePresence>
         </div>
+      </motion.div>
 
-        {/* BOTTOM PAGE CURVE EFFECT */}
-        <div className="h-1 md:h-2 bg-gradient-to-b from-slate-200/10 to-transparent shrink-0"></div>
-      </div>
-
-      {/* SHADOW FOR 3D EFFECT */}
-      <div className="h-2 md:h-4 mx-4 md:mx-8 bg-slate-200/10 rounded-full blur-xl -mt-1 md:-mt-2 shrink-0"></div>
+      {/* FOOTER SHADOW */}
+      <div className="h-6 md:h-12 mx-12 md:mx-20 bg-black/5 rounded-full blur-3xl -mt-6 md:-mt-10 pointer-events-none"></div>
     </div>
   );
 };

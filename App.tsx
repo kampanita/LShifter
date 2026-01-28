@@ -22,7 +22,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
-  const [currentView, setCurrentView] = useState<'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables'>('calendar');
+  const [currentView, setCurrentView] = useState<'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays'>('calendar');
   const [theme, setTheme] = useState<'light' | 'dark' | 'sunset'>('light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
