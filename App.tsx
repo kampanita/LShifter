@@ -294,7 +294,7 @@ const App: React.FC = () => {
         {currentView === 'db_days_assignments' && <DatabaseCRUD tableName="days_assignments" title="Assignments Master" />}
         {currentView === 'db_holidays' && <DatabaseCRUD tableName="holidays" title="Holidays Table" />}
         {currentView === 'db_notes' && <DatabaseCRUD tableName="notes" title="Raw Notes" />}
-        {currentView === 'db_tables' && <TablesOverview />}
+        {currentView === 'db_tables' && <TablesOverview onBack={() => setCurrentView('calendar')} />}
       </div>
 
       {/* Modals are Global */}

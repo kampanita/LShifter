@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 
 interface Props {
@@ -18,6 +18,7 @@ export const Sidebar: React.FC<Props> = ({
   onChangeView,
   onSignOut
 }) => {
+  const [dbTablesOpen, setDbTablesOpen] = useState(false);
   const userInitial = session.user.email?.charAt(0).toUpperCase() || 'U';
   const userName = session.user.user_metadata?.full_name || session.user.email;
 
@@ -75,51 +76,39 @@ export const Sidebar: React.FC<Props> = ({
 
             <div className="pt-4 mt-4 border-t border-slate-100">
               <p className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Database Management</p>
-
-              <button
-                onClick={() => { onChangeView('db_profiles'); onClose(); }}
-                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_profiles' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                <i className="fa-solid fa-users w-5 text-center text-xs"></i>
-                <span className="text-sm">Profiles</span>
+            <div className="space-y-2">
+              <button onClick={() => setDbTablesOpen(!dbTablesOpen)} className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-slate-700 hover:bg-slate-50">
+                <span className="flex items-center space-x-3">
+                  <i className="fa-solid fa-database w-5 text-center text-xs"></i>
+                  <span className="text-sm">Database Tables</span>
+                </span>
+                <i className={`fa-solid ${dbTablesOpen ? 'fa-chevron-down' : 'fa-chevron-right'}`}></i>
               </button>
-
-              <button
-                onClick={() => { onChangeView('db_shift_types'); onClose(); }}
-                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_shift_types' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                <i className="fa-solid fa-list w-5 text-center text-xs"></i>
-                <span className="text-sm">Shift Types (SQL)</span>
-              </button>
-
-              <button
-                onClick={() => { onChangeView('db_days_assignments'); onClose(); }}
-                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_days_assignments' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                <i className="fa-solid fa-calendar-check w-5 text-center text-xs"></i>
-                <span className="text-sm">Assignments</span>
-              </button>
-
-              <button
-                onClick={() => { onChangeView('db_holidays'); onClose(); }}
-                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_holidays' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                <i className="fa-solid fa-umbrella-beach w-5 text-center text-xs"></i>
-                <span className="text-sm">Holidays</span>
-              </button>
-
-              <button
-                onClick={() => { onChangeView('db_notes'); onClose(); }}
-                className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_notes' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                <i className="fa-solid fa-sticky-note w-5 text-center text-xs"></i>
-                <span className="text-sm">Notes Table</span>
-              </button>
+              {dbTablesOpen && (
+                <div className="pl-6 space-y-2">
+                  <button onClick={() => { onChangeView('db_profiles'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_profiles' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <i className="fa-solid fa-users w-5 text-center text-xs"></i>
+                    <span className="text-sm">Profiles</span>
+                  </button>
+                  <button onClick={() => { onChangeView('db_shift_types'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_shift_types' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <i className="fa-solid fa-list w-5 text-center text-xs"></i>
+                    <span className="text-sm">Shift Types</span>
+                  </button>
+                  <button onClick={() => { onChangeView('db_days_assignments'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_days_assignments' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <i className="fa-solid fa-calendar-check w-5 text-center text-xs"></i>
+                    <span className="text-sm">Assignments</span>
+                  </button>
+                  <button onClick={() => { onChangeView('db_holidays'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_holidays' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <i className="fa-solid fa-umbrella-beach w-5 text-center text-xs"></i>
+                    <span className="text-sm">Holidays</span>
+                  </button>
+                  <button onClick={() => { onChangeView('db_notes'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-xl transition-colors ${currentView === 'db_notes' ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50'}`}>
+                    <i className="fa-solid fa-sticky-note w-5 text-center text-xs"></i>
+                    <span className="text-sm">Notes</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
               <button
                 onClick={() => { onChangeView('db_tables'); onClose(); }}

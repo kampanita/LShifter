@@ -75,13 +75,24 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title }) => {
                     <h2 className="text-xl font-bold text-slate-800">{title}</h2>
                     <p className="text-sm text-slate-500">Database Table: {tableName}</p>
                 </div>
-                <button
-                    onClick={() => { setEditingId(null); setNewItem({}); }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
-                >
-                    <i className="fa-solid fa-sync"></i>
-                    <span onClick={() => fetchData()}>Refresh</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                    <button
+                        onClick={() => { setEditingId(null); setNewItem({}); }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                        aria-label="Add new item"
+                    >
+                        <i className="fa-solid fa-plus"></i>
+                        <span>New</span>
+                    </button>
+                    <button
+                        onClick={() => fetchData()}
+                        className="bg-white border border-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                        aria-label="Refresh data"
+                    >
+                        <i className="fa-solid fa-sync"></i>
+                        <span>Refresh</span>
+                    </button>
+                </div>
             </div>
 
             <div className="flex-1 overflow-auto p-4">
@@ -149,13 +160,21 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title }) => {
                                         <td className="px-4 py-2 text-right whitespace-nowrap">
                                             {editingId === item.id ? (
                                                 <div className="space-x-2">
-                                                    <button onClick={() => handleSave(item.id)} className="text-green-600 hover:text-green-800 font-bold">Save</button>
-                                                    <button onClick={() => setEditingId(null)} className="text-slate-500 hover:text-slate-700">Cancel</button>
+                                                    <button onClick={() => handleSave(item.id)} className="text-green-600 hover:text-green-800 font-bold" aria-label="Save">
+                                                        <i className="fa-solid fa-check"></i> Save
+                                                    </button>
+                                                    <button onClick={() => setEditingId(null)} className="text-slate-500 hover:text-slate-700" aria-label="Cancel edit">
+                                                        <i className="fa-solid fa-times"></i> Cancel
+                                                    </button>
                                                 </div>
                                             ) : (
                                                 <div className="space-x-2">
-                                                    <button onClick={() => { setEditingId(item.id); setNewItem(item); }} className="text-indigo-600 hover:text-indigo-800"><i className="fa-solid fa-pen"></i></button>
-                                                    <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700"><i className="fa-solid fa-trash"></i></button>
+                                                    <button onClick={() => { setEditingId(item.id); setNewItem(item); }} className="text-indigo-600 hover:text-indigo-800" aria-label="Edit">
+                                                        <i className="fa-solid fa-pen"></i>
+                                                    </button>
+                                                    <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:text-red-700" aria-label="Delete">
+                                                        <i className="fa-solid fa-trash"></i>
+                                                    </button>
                                                 </div>
                                             )}
                                         </td>
