@@ -270,6 +270,65 @@ export const StatisticsView: React.FC<Props> = ({ currentDate: initialDate, assi
                         </div>
                     </div>
                 </div>
+                {/* Detailed Table Stats */}
+                <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-100 overflow-hidden">
+                    <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center">
+                        <i className="fa-solid fa-table mr-3 text-indigo-500"></i>
+                        Detalle Tabular
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-slate-100">
+                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo de Turno</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Asignaciones</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Horas Totales</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {shiftTypes
+                                    .filter(shift => stats.shiftStats[shift.id]?.count > 0)
+                                    .sort((a, b) => (stats.shiftStats[b.id]?.hours || 0) - (stats.shiftStats[a.id]?.hours || 0))
+                                    .map(shift => {
+                                        const stat = stats.shiftStats[shift.id];
+                                        const percentage = stats.totalHours > 0 ? (stat.hours / stats.totalHours) * 100 : 0;
+                                        return (
+                                            <tr key={shift.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-sm" style={{ backgroundColor: shift.color }}>
+                                                            {shift.code}
+                                                        </div>
+                                                        <span className="text-sm font-bold text-slate-700">{shift.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center font-bold text-slate-600">
+                                                    {stat.count}
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-black text-slate-800">
+                                                    {stat.hours.toFixed(1)}h
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-bold text-slate-400">
+                                                    {percentage.toFixed(1)}%
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                <tr className="bg-slate-50/50">
+                                    <td className="px-6 py-4 font-black text-slate-800 uppercase tracking-widest text-xs">Total</td>
+                                    <td className="px-6 py-4 text-center font-black text-slate-800 text-xs">
+                                        {Object.values(stats.shiftStats).reduce((acc, curr) => acc + curr.count, 0)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-black text-indigo-600 text-lg">
+                                        {stats.totalHours.toFixed(1)}h
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold text-slate-400">100%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );

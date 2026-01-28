@@ -146,10 +146,15 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         setIsFormOpen(false);
     }, [tableName]);
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (item: any) => {
+        if (!item.id) return;
+        if (tableName === 'holidays' && !item.profile_id) {
+            alert("Cannot delete global/public holidays.");
+            return;
+        }
         if (!window.confirm('Confirm deletion?')) return;
         try {
-            const { error } = await supabase.from(tableName).delete().eq('id', id);
+            const { error } = await supabase.from(tableName).delete().eq('id', item.id);
             if (error) throw error;
             fetchData();
         } catch (err: any) {
@@ -329,7 +334,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                                                 <td className="px-6 py-4">
                                                     <div className="flex space-x-2">
                                                         <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"><i className="fa-solid fa-pen text-[10px]"></i></button>
-                                                        <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i className="fa-solid fa-trash text-[10px]"></i></button>
+                                                        <button onClick={() => handleDelete(item)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i className="fa-solid fa-trash text-[10px]"></i></button>
                                                     </div>
                                                 </td>
                                                 {tableDef.fields.filter(f => !f.hiddenInView).map(f => (
@@ -351,7 +356,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                                         <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i className={`fa-solid ${tableDef.icon}`}></i></div>
                                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i className="fa-solid fa-pen text-[10px]"></i></button>
-                                            <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i className="fa-solid fa-trash text-[10px]"></i></button>
+                                            <button onClick={() => handleDelete(item)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i className="fa-solid fa-trash text-[10px]"></i></button>
                                         </div>
                                     </div>
                                     {tableDef.fields.filter(f => !f.hiddenInView).slice(0, 5).map(f => (

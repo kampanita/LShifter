@@ -92,7 +92,6 @@ function App() {
 
         // SEED DEFAULT SHIFTS IF MISSING
         if (profileId) {
-          console.log("🌱 CHECKING Seeding for profile:", profileId);
           // Default duration is in MINUTES for DB (480 = 8 hours)
           const defaults = [
             { name: 'Mañana', color: '#F59E0B', default_start: '06:00', default_end: '14:00', default_duration: 480, profile_id: profileId },
@@ -100,31 +99,41 @@ function App() {
             { name: 'Noche', color: '#3B82F6', default_start: '22:00', default_end: '06:00', default_duration: 480, profile_id: profileId },
           ];
 
-          const existingNames = new Set(finalData.map((s: any) => s.name));
-          const toInsert = defaults.filter(d => !existingNames.has(d.name));
+          // Case insensitive check
+          const existingNames = new Set(finalData.map((s: any) => s.name?.toLowerCase()));
+          const toInsert = defaults.filter(d => !existingNames.has(d.name.toLowerCase()));
 
           if (toInsert.length > 0) {
             console.log("🌱 INSERTING Missing Defaults:", toInsert.map(d => d.name));
             const { data: inserted } = await supabase.from('shift_types').insert(toInsert).select();
             if (inserted) {
               finalData = [...finalData, ...inserted];
-              // Re-sort by name to keep it tidy
-              finalData.sort((a, b) => a.name.localeCompare(b.name));
             }
           }
         }
 
+        // Deduplicate by Name (Keep last or first? Keep DB existing preferred over recent insert if conflict, but here we just merge)
+        const uniqueData = Array.from(new Map(finalData.map(item => [item.name, item])).values());
+
         // Map to App State (Domain = Hours)
-        const mapped: ShiftType[] = finalData.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          code: s.name.charAt(0).toUpperCase(),
-          color: s.color || '#4f46e5',
-          startTime: s.default_start?.substring(0, 5) || '',
-          endTime: s.default_end?.substring(0, 5) || '',
-          // Convert DB Minutes -> App Hours
-          default_duration: s.default_duration ? Number((s.default_duration / 60).toFixed(2)) : undefined
-        }));
+        const mapped: ShiftType[] = uniqueData.map((s: any) => {
+          // HEURISTIC: If duration > 30, assume Minutes. If < 30, assume Hours (Legacy Data).
+          let durationHours = s.default_duration ? Number(s.default_duration) : 0;
+          if (durationHours > 30) {
+            durationHours = Number((durationHours / 60).toFixed(2));
+          }
+
+          return {
+            id: s.id,
+            name: s.name,
+            code: s.name.charAt(0).toUpperCase(),
+            color: s.color || '#4f46e5',
+            startTime: s.default_start?.substring(0, 5) || '',
+            endTime: s.default_end?.substring(0, 5) || '',
+            default_duration: durationHours || undefined
+          };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+
         setShiftTypes(mapped);
       };
 
