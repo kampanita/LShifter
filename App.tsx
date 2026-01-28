@@ -47,7 +47,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
-  const [currentView, setCurrentView] = useState<'calendar' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables'>('calendar');
+  const [currentView, setCurrentView] = useState<'calendar' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables'>('calendar');
   const [theme, setTheme] = useState<'light' | 'dark' | 'sunset'>('light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -132,29 +132,24 @@ const App: React.FC = () => {
 
       fetchHolidays();
 
-      // Resolve Profile ID for DB sync
+      // Resolve Profile ID for DB sync and Sync Meta
       const resolveProfile = async () => {
         if (localStorage.getItem('shifter_guest_mode') === 'true') return;
 
-        // Try to find existing profile
-        const { data: profiles } = await supabase
+        const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
+
+        // Upsert profile to ensure it exists and matches session metadata
+        const { data: profile, error } = await supabase
           .from('profiles')
-          .select('id')
-          .eq('user_id', userId)
+          .upsert({
+            user_id: userId,
+            name: fullName
+          }, { onConflict: 'user_id' })
+          .select()
           .single();
 
-        if (profiles) {
-          setProfileId(profiles.id);
-        } else {
-          // Create a default profile if not found
-          const { data: newProfile } = await supabase
-            .from('profiles')
-            .insert([{ user_id: userId, name: session.user.user_metadata?.full_name || 'My Profile' }])
-            .select()
-            .single();
-
-          if (newProfile) setProfileId(newProfile.id);
-        }
+        if (profile) setProfileId(profile.id);
+        else if (error) console.error('Profile sync error:', error.message);
       };
       resolveProfile();
     } else {
@@ -333,10 +328,8 @@ const App: React.FC = () => {
         {/* CRUD VIEWS with Navigation Header */}
         {[
           { id: 'db_profiles', table: 'profiles', title: 'Profiles Management' },
-          { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types (SQL)' },
-          { id: 'db_days_assignments', table: 'days_assignments', title: 'Assignments Master' },
+          { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
           { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
-          { id: 'db_notes', table: 'notes', title: 'Raw Notes' }
         ].map((view) => currentView === view.id && (
           <div key={view.id} className="flex-1 flex flex-col h-full overflow-hidden">
             <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">

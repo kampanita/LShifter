@@ -5,8 +5,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   session: Session;
-  currentView: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables';
-  onChangeView: (view: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables') => void;
+  currentView: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables';
+  onChangeView: (view: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables') => void;
   theme?: 'light' | 'dark' | 'sunset';
   onChangeTheme?: (t: 'light' | 'dark' | 'sunset') => void;
   onSignOut: () => void;
@@ -98,11 +98,7 @@ export const Sidebar: React.FC<Props> = ({
                     </button>
                     <button onClick={() => { onChangeView('db_shift_types'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_shift_types' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
                       <i className="fa-solid fa-tags w-4 text-center"></i>
-                      <span>Shift Types Table</span>
-                    </button>
-                    <button onClick={() => { onChangeView('db_days_assignments'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_days_assignments' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
-                      <i className="fa-solid fa-calendar-alt w-4 text-center"></i>
-                      <span>Assignments</span>
+                      <span>Shift Types</span>
                     </button>
                     <button onClick={() => { onChangeView('db_holidays'); onClose(); }} className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-xs transition-colors ${currentView === 'db_holidays' ? 'bg-indigo-50 text-indigo-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}>
                       <i className="fa-solid fa-umbrella-beach w-4 text-center"></i>

@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { DatabaseCRUD } from './DatabaseCRUD';
 
 const TABLE_META: Record<string, { label: string, desc: string, icon: string, color: string }> = {
-  profiles: { label: 'User Profiles', desc: 'Manage application users and their basic display info.', icon: 'fa-user-circle', color: 'bg-blue-500' },
-  shift_types: { label: 'Shift Configurations', desc: 'Define your shifts: names, colors, and default times.', icon: 'fa-clock', color: 'bg-indigo-500' },
-  days_assignments: { label: 'Daily Planner', desc: 'The master table linking profiles to shifts on specific dates.', icon: 'fa-calendar-check', color: 'bg-emerald-500' },
+  profiles: { label: 'User Profiles', desc: 'Sync and manage user display information from OAuth.', icon: 'fa-user-circle', color: 'bg-blue-500' },
+  shift_types: { label: 'Shift Configurations', desc: 'Define names, colors, and autocalculated durations.', icon: 'fa-clock', color: 'bg-indigo-500' },
   holidays: { label: 'Public Holidays', desc: 'Reference table for national or local holidays.', icon: 'fa-umbrella-beach', color: 'bg-amber-500' },
-  notes: { label: 'Raw Notes', desc: 'Manage historical content and extra data for assignments.', icon: 'fa-clipboard', color: 'bg-rose-500' },
 };
 
 export const TablesOverview: React.FC<{ onBack?: () => void, userId?: string }> = ({ onBack, userId }) => {
