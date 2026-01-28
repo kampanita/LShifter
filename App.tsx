@@ -87,7 +87,7 @@ function App() {
 
       const fetchShifts = async () => {
         const { data } = await supabase.from('shift_types').select('*').or(`profile_id.eq.${profileId},profile_id.is.null`).order('name');
-        if (data) {
+        if (data && data.length > 0) {
           const mapped: ShiftType[] = data.map((s: any) => ({
             id: s.id,
             name: s.name,
@@ -98,6 +98,31 @@ function App() {
             default_duration: s.default_duration
           }));
           setShiftTypes(mapped);
+        } else if (profileId) {
+          // SEED DEFAULT SHIFTS IF EMPTY
+          console.log("🌱 SEEDING Default Shifts for profile:", profileId);
+          const defaults = [
+            { name: 'Mañana', color: '#F59E0B', default_start: '06:00', default_end: '14:00', default_duration: 8, profile_id: profileId },
+            { name: 'Tarde', color: '#10B981', default_start: '14:00', default_end: '22:00', default_duration: 8, profile_id: profileId },
+            { name: 'Noche', color: '#3B82F6', default_start: '22:00', default_end: '06:00', default_duration: 8, profile_id: profileId },
+          ];
+          const { error } = await supabase.from('shift_types').insert(defaults);
+          if (!error) {
+            // Retry fetch recursively once
+            const { data: retry } = await supabase.from('shift_types').select('*').eq('profile_id', profileId);
+            if (retry) {
+              const mapped: ShiftType[] = retry.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                code: s.name.charAt(0).toUpperCase(),
+                color: s.color || '#4f46e5',
+                startTime: s.default_start?.substring(0, 5) || '',
+                endTime: s.default_end?.substring(0, 5) || '',
+                default_duration: s.default_duration
+              }));
+              setShiftTypes(mapped);
+            }
+          }
         }
       };
 

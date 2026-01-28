@@ -45,7 +45,7 @@ const SCHEMA: Record<string, TableDefinition> = {
             { name: 'color', label: 'Color', type: 'color', required: false, defaultValue: '#10b981' },
             { name: 'default_start', label: 'Start Time', type: 'time', required: false },
             { name: 'default_end', label: 'End Time', type: 'time', required: false },
-            { name: 'default_duration', label: 'Duration (Hours)', type: 'number', required: false, readOnly: true },
+            { name: 'default_duration', label: 'Duration (Hours)', type: 'number', required: false }, // Removed readOnly to allow manual fix
         ]
     },
     holidays: {
@@ -151,8 +151,10 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         e.preventDefault();
         const payload: any = {};
 
-        // Auto-calculate duration for shifts
-        if (tableName === 'shift_types') {
+        // Auto-calculate duration for shifts IF not manually set (or allow overwrite)
+        // We only recalc if user changed times. For now, rely on what's in editingItem
+        // which might have been calculated on change or manually edited.
+        if (tableName === 'shift_types' && !editingItem.default_duration && editingItem.default_start && editingItem.default_end) {
             const duration = calculateDuration(editingItem.default_start, editingItem.default_end);
             editingItem.default_duration = duration;
         }
@@ -184,23 +186,48 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         }
     };
 
-    const handleBulkImport = async (holidays: { date: string, name: string }[]) => {
+    const handleBulkImport = async (newHolidays: { date: string, name: string }[]) => {
         try {
             setLoading(true);
             const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
             const pid = profile?.id;
 
-            const payload = holidays.map(h => ({
-                date: h.date,
-                name: h.name,
-                country_code: 'ES',
-                profile_id: pid
-            }));
+            if (!pid) throw new Error("Profile not found.");
 
-            const { error } = await supabase.from('holidays').insert(payload);
+            // 1. Fetch existing holidays for this profile to prevent duplicates
+            // We fetch ONLY dates to be efficient
+            const { data: existing, error: fetchErr } = await supabase
+                .from('holidays')
+                .select('date')
+                .eq('profile_id', pid);
+
+            if (fetchErr) throw fetchErr;
+
+            const existingDates = new Set(existing?.map(h => h.date) || []);
+
+            // 2. Filter out holidays that already exist
+            const toInsert = newHolidays
+                .filter(h => !existingDates.has(h.date))
+                .map(h => ({
+                    date: h.date,
+                    name: h.name,
+                    country_code: 'ES',
+                    profile_id: pid
+                }));
+
+            if (toInsert.length === 0) {
+                alert("All imported holidays already exist in the database.");
+                return;
+            }
+
+            console.log(`Importing ${toInsert.length} new holidays (filtered ${newHolidays.length - toInsert.length} duplicates).`);
+
+            // 3. Insert only new ones
+            const { error } = await supabase.from('holidays').insert(toInsert);
             if (error) throw error;
 
             fetchData();
+            alert(`Successfully imported ${toInsert.length} holidays.`);
         } catch (err: any) {
             alert("Bulk Import failed: " + err.message);
         } finally {
