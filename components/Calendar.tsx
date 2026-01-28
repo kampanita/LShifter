@@ -99,7 +99,7 @@ export const Calendar: React.FC<Props> = ({
 
             let cellBg = 'bg-transparent';
             if (isToday) cellBg = 'bg-indigo-100/40';
-            else if (isHoliday) cellBg = 'bg-rose-100/30';
+            else if (isHoliday) cellBg = 'bg-rose-100/50';
             else if (isWeekend) cellBg = 'bg-rose-50';
 
             return (
@@ -131,9 +131,9 @@ export const Calendar: React.FC<Props> = ({
 
                 {/* HOLIDAY RIBBON - Premium 3D Effect */}
                 {isHoliday && (
-                  <div className="absolute top-0 right-0 overflow-hidden w-10 md:w-20 h-10 md:h-20 pointer-events-none z-20">
-                    <div className="absolute top-1.5 md:top-4 -right-5 md:-right-7 w-20 md:w-32 bg-gradient-to-r from-rose-500 to-rose-700 text-white text-[5px] md:text-[9px] font-black uppercase tracking-widest text-center py-0.5 md:py-1.5 rotate-45 shadow-[0_2px_4px_rgba(0,0,0,0.3)] border-y border-rose-400/30">
-                      {holiday.name?.substring(0, 10)}
+                  <div className="absolute top-0 right-0 overflow-hidden w-12 md:w-24 h-12 md:h-24 pointer-events-none z-20">
+                    <div className="absolute top-2 md:top-5 -right-6 md:-right-8 w-24 md:w-36 bg-gradient-to-r from-rose-500 via-rose-600 to-rose-700 text-white text-[6px] md:text-[10px] font-black uppercase tracking-widest text-center py-1 md:py-2 rotate-45 shadow-[0_4px_8px_rgba(0,0,0,0.3)] border-y border-rose-400/30">
+                      {holiday.name}
                     </div>
                   </div>
                 )}

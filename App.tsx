@@ -69,22 +69,35 @@ function App() {
 
     const fetchHolidays = async (pId: string) => {
       console.log("Fetching holidays for profile:", pId);
-      // Fetch user's holidays OR holidays with no owner (pre-migration)
-      const { data, error } = await supabase.from('holidays').select('*').or(`profile_id.eq.${pId},profile_id.is.null`);
-      if (error) {
-        console.error("Error fetching holidays:", error);
-        return;
-      }
+      try {
+        const { data, error } = await supabase
+          .from('holidays')
+          .select('*')
+          .or(`profile_id.eq.${pId},profile_id.is.null`);
 
-      if (data) {
-        console.log("Holidays data received:", data.length, "rows");
-        const mapped: Record<string, Holiday> = {};
-        data.forEach((h: any) => {
-          // Normalize date: ensure it's YYYY-MM-DD
-          const dStr = h.date.split('T')[0];
-          mapped[dStr] = { date: dStr, name: h.name, country_code: h.country_code };
-        });
-        setHolidays(mapped);
+        if (error) {
+          console.error("Error fetching holidays:", error);
+          return;
+        }
+
+        if (data) {
+          console.log("Holidays data received:", data.length, "rows");
+          const mapped: Record<string, Holiday> = {};
+          data.forEach((h: any) => {
+            if (!h.date) return;
+            // Robust normalization: split by T or space
+            const dStr = h.date.split(/[T ]/)[0];
+            mapped[dStr] = {
+              id: h.id,
+              date: dStr,
+              name: h.name || 'Festivo',
+              country_code: h.country_code
+            };
+          });
+          setHolidays(mapped);
+        }
+      } catch (err) {
+        console.error("fetchHolidays exception:", err);
       }
     };
 
@@ -104,7 +117,7 @@ function App() {
         if (error) throw error;
 
         if (profile) {
-          setProfileId(profile.id);
+          if (profile.id !== profileId) setProfileId(profile.id);
           fetchShifts(profile.id);
           fetchHolidays(profile.id);
         }
@@ -116,7 +129,7 @@ function App() {
     if (session && userId) {
       resolveProfile();
     } else {
-      setShiftTypes(storageService.getShiftTypes());
+      setShiftTypes(storageService.getShiftTypes('guest'));
     }
 
     if (userId) {
