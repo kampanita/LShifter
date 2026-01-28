@@ -117,25 +117,26 @@ export const Calendar: React.FC<Props> = ({
                   animate={{ opacity: 1, y: 0 }}
                   className={`
                     relative flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
-                    m-1.5 md:m-2.5 rounded-2xl md:rounded-[1.8rem]
-                    min-h-[85px] md:min-h-0
-                    ${isToday ? 'bg-indigo-50/30' : (isHoliday ? 'bg-rose-50/40' : (isWeekend ? 'bg-slate-100/50' : 'bg-white'))}
-                    /* EXTRUDED BEZEL EFFECT */
+                    m-2 md:m-3.5 rounded-2xl md:rounded-[2.2rem]
+                    min-h-[90px] md:min-h-0
+                    ${isToday ? 'bg-indigo-50/40' : (isHoliday ? 'bg-rose-50/30' : (isWeekend ? 'bg-amber-50/60' : 'bg-white'))}
+                    /* EXTRUDED BEZEL EFFECT - EXAGGERATED */
                     shadow-[
-                      8px_8px_16px_rgba(0,0,0,0.06),
-                      -8px_-8px_16px_rgba(255,255,255,0.9),
-                      inset_0_0_0_1px_rgba(255,255,255,0.5)
+                      12px_12px_24px_rgba(0,0,0,0.1),
+                      -12px_-12px_24px_rgba(255,255,255,1),
+                      inset_0_0_0_2px_rgba(255,255,255,0.8)
                     ]
                     hover:shadow-[
-                      12px_12px_24px_rgba(0,0,0,0.08),
-                      -12px_-12px_24px_rgba(255,255,255,1),
-                      inset_0_0_0_1px_rgba(79,70,229,0.1)
+                      18px_18px_36px_rgba(0,0,0,0.12),
+                      -18px_-18px_36px_rgba(255,255,255,1),
+                      inset_0_0_0_2px_rgba(79,70,229,0.2)
                     ]
+                    hover:scale-[1.02]
                     active:shadow-[
-                      inset_4px_4px_8px_rgba(0,0,0,0.05),
-                      inset_-4px_-4px_8px_rgba(255,255,255,0.8)
+                      inset_6px_6px_12px_rgba(0,0,0,0.1),
+                      inset_-6px_-6px_12px_rgba(255,255,255,0.8)
                     ]
-                    active:scale-[0.98]
+                    active:scale-[0.97]
                   `}
                   onPointerDown={(e) => {
                     e.preventDefault();
@@ -143,43 +144,39 @@ export const Calendar: React.FC<Props> = ({
                   }}
                   onPointerEnter={() => handlePointerEnter(date)}
                 >
-                  {/* INNER BEZEL LINE */}
-                  <div className="absolute inset-2 rounded-[1.2rem] border border-slate-100/50 pointer-events-none"></div>
+                  {/* HOLIDAY RIBBON - 45 DEGREE ROTATED */}
+                  {isHoliday && (
+                    <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 overflow-hidden rounded-tr-[2.2rem] pointer-events-none z-20">
+                      <div className="absolute top-3 md:top-5 -right-6 md:-right-8 w-24 md:w-36 bg-gradient-to-r from-rose-500 to-rose-600 text-white text-[6px] md:text-[9px] font-black uppercase tracking-widest text-center py-1 md:py-1.5 rotate-45 shadow-md border-y border-white/20">
+                        {holiday.name}
+                      </div>
+                    </div>
+                  )}
 
                   {/* DAY NUMBER */}
                   <div
                     className={`
                       absolute top-4 left-5 text-xs md:text-sm font-black transition-all z-10
-                      ${isToday ? 'text-indigo-600' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-slate-400' : 'text-slate-500'))}
+                      ${isToday ? 'text-indigo-600' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-amber-700/80' : 'text-slate-600'))}
                     `}
                   >
                     {date.getDate()}
-                    {isToday && <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mx-auto mt-1 shadow-[0_0_10px_rgba(79,70,229,0.4)]"></div>}
+                    {isToday && <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full mx-auto mt-1 shadow-[0_0_8px_rgba(79,70,229,0.5)]"></div>}
                   </div>
-
-                  {/* HOLIDAY LABEL */}
-                  {isHoliday && (
-                    <div className="absolute top-3 right-3 px-2 py-1 bg-rose-500 rounded-lg shadow-lg shadow-rose-200 z-20">
-                      <span className="text-[7px] md:text-[9px] font-black text-white uppercase whitespace-nowrap">
-                        {holiday.name}
-                      </span>
-                    </div>
-                  )}
 
                   {/* SHIFT CONTENT */}
                   <AnimatePresence mode="wait">
                     {shift ? (
                       <motion.div
                         key={shift.id}
-                        initial={{ scale: 0.8, opacity: 0, y: 5 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         whileHover={{ scale: 1.05 }}
                         className="w-[82%] h-[72%] rounded-2xl flex flex-col items-center justify-center shadow-lg relative overflow-hidden"
                         style={{
                           backgroundColor: shift.color,
                           border: '3px solid white',
-                          boxShadow: `0 10px 20px -5px ${shift.color}44`
                         }}
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
