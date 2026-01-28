@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from './src/data/supabaseClient';
+import { supabase, getRedirectUrl } from './src/data/supabaseClient';
 import { Calendar } from './components/Calendar';
 import { Sidebar } from './components/Sidebar';
 import { ShiftPalette } from './components/ShiftPalette';
@@ -227,7 +227,7 @@ function App() {
             onClick={() => supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
-                redirectTo: window.location.origin + (import.meta.env.BASE_URL || '/')
+                redirectTo: getRedirectUrl()
               }
             })}
             className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-slate-100 hover:border-indigo-500 hover:bg-slate-50 transition-all p-4 rounded-2xl font-bold text-slate-700 shadow-sm overflow-hidden relative group"

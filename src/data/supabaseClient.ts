@@ -71,11 +71,25 @@ export type DayAssignmentSQL = {
   updated_at?: string;
 };
 
+// Helper to get the correct redirect URL for Supabase Auth
+export const getRedirectUrl = () => {
+  const origin = window.location.origin;
+  // import.meta.env.BASE_URL contains the base path from vite.config.ts (e.g., '/LShifter/')
+  const base = import.meta.env.BASE_URL || '/';
+
+  // Combine origin and base path, ensuring no double slashes except for the protocol
+  let url = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+  url += base.startsWith('/') ? base : `/${base}`;
+
+  // Ensure it ends with a slash
+  return url.endsWith('/') ? url : `${url}/`;
+};
+
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: getRedirectUrl(),
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
