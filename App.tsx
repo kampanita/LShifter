@@ -113,38 +113,49 @@ function App() {
       }
     };
 
-    const resolveProfile = async () => {
-      if (!session?.user || !userId) {
-        console.warn("⚠️ RESOLVE_PROFILE - No session or userId, skipping");
+    const fetchAssignments = async (pId: string) => {
+      console.log("📅 FETCH_ASSIGNMENTS - Started for profile:", pId);
+      const { data, error } = await supabase
+        .from('days_assignments')
+        .select('*')
+        .eq('profile_id', pId);
+
+      if (error) {
+        console.error("❌ FETCH_ASSIGNMENTS - Error:", error);
         return;
       }
 
-      console.log("👤 RESOLVE_PROFILE - Resolving for user:", userId);
+      if (data) {
+        const mapped: Record<string, DayAssignment> = {};
+        data.forEach((a: any) => {
+          mapped[a.date] = {
+            dateStr: a.date,
+            shiftTypeId: a.shift_type_id,
+            note: a.note
+          };
+        });
+        setAssignments(mapped);
+        console.log(`✅ FETCH_ASSIGNMENTS - Loaded ${data.length} assignments`);
+      }
+    };
+
+    const resolveProfile = async () => {
+      if (!session?.user || !userId) return;
+
       try {
         const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
 
-        // Upsert profile and get its ID
         const { data: profile, error } = await supabase
           .from('profiles')
           .upsert({ user_id: userId, name: fullName }, { onConflict: 'user_id' })
           .select()
           .single();
 
-        if (error) {
-          console.error('❌ RESOLVE_PROFILE - Upsert error:', error);
-          throw error;
-        }
-
         if (profile) {
-          console.log("✅ RESOLVE_PROFILE - Profile resolved:", profile.id, profile.name);
-          if (profile.id !== profileId) {
-            console.log("🔄 RESOLVE_PROFILE - Updating profileId state to:", profile.id);
-            setProfileId(profile.id);
-          }
+          setProfileId(profile.id);
           fetchShifts(profile.id);
           fetchHolidays(profile.id);
-        } else {
-          console.warn("⚠️ RESOLVE_PROFILE - No profile returned after upsert");
+          fetchAssignments(profile.id);
         }
       } catch (err) {
         console.error('💥 RESOLVE_PROFILE - Exception:', err);
@@ -156,11 +167,7 @@ function App() {
     } else {
       setShiftTypes(storageService.getShiftTypes('guest'));
     }
-
-    if (userId) {
-      setAssignments(storageService.getAssignments(userId));
-    }
-  }, [session, userId, profileId]); // Removed currentView from dependencies
+  }, [session, userId, profileId, currentView]); // Removed currentView from dependencies
 
   const handlePaint = useCallback((date: Date) => {
     if (!session?.user || !selectedShiftTypeId) return;
@@ -239,7 +246,7 @@ function App() {
             })}
             className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-slate-100 hover:border-indigo-500 hover:bg-slate-50 transition-all p-4 rounded-2xl font-bold text-slate-700 shadow-sm overflow-hidden relative group"
           >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/listbox/google.svg" className="w-6 h-6" alt="Google" />
+            <i className="fa-brands fa-google text-xl text-[#4285F4]"></i>
             <span>Continuar con Google</span>
           </motion.button>
         </motion.div>
@@ -328,60 +335,60 @@ function App() {
           )}
 
 
-        {currentView === 'stats' && (
-          <div className="absolute inset-0 flex flex-col">
-            <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="w-10 h-10 -ml-2 mr-4 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-all"
-              >
-                <i className="fa-solid fa-bars-staggered text-xl"></i>
-              </button>
-              <h1 className="text-xl font-bold text-slate-800">Estadísticas</h1>
-            </header>
-            <div className="flex-1 relative">
-              <StatisticsView
-                currentDate={currentDate}
-                assignments={assignments}
-                shiftTypes={shiftTypes}
-                holidays={holidays}
-              />
+          {currentView === 'stats' && (
+            <div className="absolute inset-0 flex flex-col">
+              <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
+                <button
+                  onClick={() => setIsMenuOpen(true)}
+                  className="w-10 h-10 -ml-2 mr-4 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-all"
+                >
+                  <i className="fa-solid fa-bars-staggered text-xl"></i>
+                </button>
+                <h1 className="text-xl font-bold text-slate-800">Estadísticas</h1>
+              </header>
+              <div className="flex-1 relative">
+                <StatisticsView
+                  currentDate={currentDate}
+                  assignments={assignments}
+                  shiftTypes={shiftTypes}
+                  holidays={holidays}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* CRUD VIEWS with Navigation Header */}
-        {[
-          { id: 'db_profiles', table: 'profiles', title: 'Profiles Management' },
-          { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
-          { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
-        ].map((view) => currentView === view.id && (
-          <div key={view.id} className="absolute inset-0 flex flex-col">
-            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-              >
-                <i className="fa-solid fa-bars text-lg"></i>
-              </button>
-              <h1 className="text-lg font-bold text-slate-800">{view.title}</h1>
-            </header>
-            <DatabaseCRUD tableName={view.table} title={view.title} userId={session.user.id} />
-          </div>
-        ))}
-      </BezelFrame>
-    </main>
+          {/* CRUD VIEWS with Navigation Header */}
+          {[
+            { id: 'db_profiles', table: 'profiles', title: 'Profiles Management' },
+            { id: 'db_shift_types', table: 'shift_types', title: 'Shift Types' },
+            { id: 'db_holidays', table: 'holidays', title: 'Holidays Table' },
+          ].map((view) => currentView === view.id && (
+            <div key={view.id} className="absolute inset-0 flex flex-col">
+              <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
+                <button
+                  onClick={() => setIsMenuOpen(true)}
+                  className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                >
+                  <i className="fa-solid fa-bars text-lg"></i>
+                </button>
+                <h1 className="text-lg font-bold text-slate-800">{view.title}</h1>
+              </header>
+              <DatabaseCRUD tableName={view.table} title={view.title} userId={session.user.id} />
+            </div>
+          ))}
+        </BezelFrame>
+      </main>
 
       {
-    isMonthPickerOpen && (
-      <MonthPicker
-        isOpen={isMonthPickerOpen}
-        onClose={() => setIsMonthPickerOpen(false)}
-        currentDate={currentDate}
-        onChange={setCurrentDate}
-      />
-    )
-  }
+        isMonthPickerOpen && (
+          <MonthPicker
+            isOpen={isMonthPickerOpen}
+            onClose={() => setIsMonthPickerOpen(false)}
+            currentDate={currentDate}
+            onChange={setCurrentDate}
+          />
+        )
+      }
     </div >
   );
 }

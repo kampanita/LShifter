@@ -3,6 +3,25 @@ import React from 'react';
 export const ShifterLogo: React.FC<{ className?: string }> = ({ className = "w-12 h-12" }) => {
     return (
         <div className={`relative ${className} group`}>
+            <style>
+                {`
+                @keyframes shifter-pulse {
+                    0%, 100% { transform: scale(1); filter: brightness(1); }
+                    50% { transform: scale(1.02); filter: brightness(1.1); }
+                }
+                @keyframes shifter-draw {
+                    from { stroke-dashoffset: 100; }
+                    to { stroke-dashoffset: 0; }
+                }
+                .animate-shifter-pulse {
+                    animation: shifter-pulse 4s ease-in-out infinite;
+                    transform-origin: center;
+                }
+                .animate-shifter-draw {
+                    animation: shifter-draw 2s ease-out forwards;
+                }
+                `}
+            </style>
             {/* Animated SVG Logo */}
             <svg
                 viewBox="0 0 100 100"
@@ -13,21 +32,13 @@ export const ShifterLogo: React.FC<{ className?: string }> = ({ className = "w-1
                         <stop offset="0%" stopColor="#818cf8" />
                         <stop offset="100%" stopColor="#4f46e5" />
                     </linearGradient>
-                    <filter id="innerShadow">
-                        <feOffset dx="0" dy="2" />
-                        <feGaussianBlur stdDeviation="1.5" result="offset-blur" />
-                        <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
-                        <feFlood floodColor="black" floodOpacity="0.2" result="color" />
-                        <feComposite operator="in" in="color" in2="inverse" result="shadow" />
-                        <feComposite operator="over" in="shadow" in2="SourceGraphic" />
-                    </filter>
                 </defs>
 
                 {/* Main Body - Bezel effect */}
                 <rect
                     x="15" y="15" width="70" height="70" rx="16"
                     fill="url(#logoGrad)"
-                    className="animate-[shifter-pulse_4s_ease-in-out_infinite]"
+                    className="animate-shifter-pulse"
                 />
 
                 {/* Calendar Grid Lines */}
@@ -46,20 +57,9 @@ export const ShifterLogo: React.FC<{ className?: string }> = ({ className = "w-1
                     strokeWidth="8"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="animate-[shifter-draw_2s_ease-out_forwards]"
-                    style={{ strokeDasharray: 100, strokeDashoffset: 100 }}
+                    className="animate-shifter-draw"
+                    style={{ strokeDasharray: 100 }}
                 />
-
-                {/* Shimmer Effect */}
-                <rect x="0" y="0" width="100" height="100" fill="url(#shimmerGrad)" opacity="0.4" className="pointer-events-none" />
-                <linearGradient id="shimmerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <animateTransform attributeName="gradientTransform" type="translate" from="-1,-1" to="1,1" dur="3s" repeatCount="indefinite" />
-                    <stop offset="0%" stopColor="transparent" />
-                    <stop offset="45%" stopColor="transparent" />
-                    <stop offset="50%" stopColor="white" />
-                    <stop offset="55%" stopColor="transparent" />
-                    <stop offset="100%" stopColor="transparent" />
-                </linearGradient>
             </svg>
 
             {/* 3D Reflection layer */}
