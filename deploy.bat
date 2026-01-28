@@ -36,5 +36,4 @@ git push origin main
 
 echo.
 echo ✅ Proceso completado correctamente.
-pause
 endlocal
