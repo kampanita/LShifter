@@ -211,7 +211,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
     if (!tableDef) return <div className="p-10 text-center">Table {tableName} removed from Hub.</div>;
 
     return (
-        <div className="flex-1 flex flex-col bg-[#F3F4F6] overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col bg-[#F3F4F6] min-h-0">
             {/* TOOLBAR */}
             <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-6">
@@ -250,62 +250,64 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 min-h-0">
-                {errorNotice && <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl text-red-700 text-xs">{errorNotice}</div>}
+            <div className="flex-1 overflow-y-auto bg-[#F3F4F6] min-h-0">
+                <div className="p-6">
+                    {errorNotice && <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl text-red-700 text-xs">{errorNotice}</div>}
 
-                {loading ? (
-                    <div className="h-full flex flex-col items-center justify-center opacity-30"><i className="fa-solid fa-spinner fa-spin text-4xl mb-2"></i><p className="text-xs font-bold uppercase tracking-widest">Synchronizing...</p></div>
-                ) : viewMode === 'grid' ? (
-                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-                        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]">
-                            <table className="w-full text-left border-collapse">
-                                <thead className="sticky top-0 bg-slate-50 z-10">
-                                    <tr className="border-b border-slate-100">
-                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
-                                        {tableDef.fields.filter(f => !f.hiddenInView).map(f => <th key={f.name} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{f.label}</th>)}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {data.map(item => (
-                                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex space-x-2">
-                                                    <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"><i className="fa-solid fa-pen text-[10px]"></i></button>
-                                                    <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i className="fa-solid fa-trash text-[10px]"></i></button>
-                                                </div>
-                                            </td>
-                                            {tableDef.fields.filter(f => !f.hiddenInView).map(f => (
-                                                <td key={f.name} className="px-6 py-4 text-sm font-medium text-slate-600">
-                                                    {f.type === 'color' ? <div className="flex items-center space-x-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: item[f.name] }}></div><span className="font-mono text-xs">{item[f.name]}</span></div> : String(item[f.name] ?? '--')}
-                                                </td>
-                                            ))}
+                    {loading ? (
+                        <div className="h-full flex flex-col items-center justify-center opacity-30"><i className="fa-solid fa-spinner fa-spin text-4xl mb-2"></i><p className="text-xs font-bold uppercase tracking-widest">Synchronizing...</p></div>
+                    ) : viewMode === 'grid' ? (
+                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="sticky top-0 bg-slate-50 z-10">
+                                        <tr className="border-b border-slate-100">
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                            {tableDef.fields.filter(f => !f.hiddenInView).map(f => <th key={f.name} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{f.label}</th>)}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {data.map(item => (
-                            <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
-                                <div className="flex justify-between mb-4">
-                                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i className={`fa-solid ${tableDef.icon}`}></i></div>
-                                    <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i className="fa-solid fa-pen text-[10px]"></i></button>
-                                        <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i className="fa-solid fa-trash text-[10px]"></i></button>
-                                    </div>
-                                </div>
-                                {tableDef.fields.filter(f => !f.hiddenInView).slice(0, 5).map(f => (
-                                    <div key={f.name} className="mb-3">
-                                        <label className="block text-[9px] font-black text-slate-300 uppercase tracking-widest">{f.label}</label>
-                                        <div className="text-sm font-bold text-slate-700 truncate">{f.type === 'color' ? <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: item[f.name] }}></div><span>{item[f.name]}</span></div> : String(item[f.name] ?? '--')}</div>
-                                    </div>
-                                ))}
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {data.map(item => (
+                                            <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex space-x-2">
+                                                        <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"><i className="fa-solid fa-pen text-[10px]"></i></button>
+                                                        <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i className="fa-solid fa-trash text-[10px]"></i></button>
+                                                    </div>
+                                                </td>
+                                                {tableDef.fields.filter(f => !f.hiddenInView).map(f => (
+                                                    <td key={f.name} className="px-6 py-4 text-sm font-medium text-slate-600">
+                                                        {f.type === 'color' ? <div className="flex items-center space-x-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: item[f.name] }}></div><span className="font-mono text-xs">{item[f.name]}</span></div> : String(item[f.name] ?? '--')}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        ))}
-                    </div>
-                )}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            {data.map(item => (
+                                <div key={item.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
+                                    <div className="flex justify-between mb-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i className={`fa-solid ${tableDef.icon}`}></i></div>
+                                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><i className="fa-solid fa-pen text-[10px]"></i></button>
+                                            <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center"><i className="fa-solid fa-trash text-[10px]"></i></button>
+                                        </div>
+                                    </div>
+                                    {tableDef.fields.filter(f => !f.hiddenInView).slice(0, 5).map(f => (
+                                        <div key={f.name} className="mb-3">
+                                            <label className="block text-[9px] font-black text-slate-300 uppercase tracking-widest">{f.label}</label>
+                                            <div className="text-sm font-bold text-slate-700 truncate">{f.type === 'color' ? <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: item[f.name] }}></div><span>{item[f.name]}</span></div> : String(item[f.name] ?? '--')}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {isFormOpen && (
