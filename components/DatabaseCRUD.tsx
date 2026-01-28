@@ -238,7 +238,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
     if (!tableDef) return <div className="p-10 text-center">Table {tableName} removed from Hub.</div>;
 
     return (
-        <div className="flex-1 flex flex-col bg-[#F3F4F6]">
+        <div className="flex-1 flex flex-col bg-[#F3F4F6] min-h-0 h-full relative">
             {/* TOOLBAR */}
             <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div className="flex items-center space-x-6">
