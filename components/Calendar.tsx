@@ -110,7 +110,7 @@ export const Calendar: React.FC<Props> = ({
                       className={`
                         relative flex flex-col items-center justify-center cursor-pointer transition-all duration-150 group
                         rounded-lg md:rounded-xl
-                        min-h-[100px] md:min-h-[140px]
+                        min-h-[85px] md:min-h-[105px]
                         border-2
                         ${isToday ? 'border-[#00a8ff]' : (isHoliday ? 'border-[#ff4757]/40' : 'border-[#2d3748]')}
                         ${cellBg}
