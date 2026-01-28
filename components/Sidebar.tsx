@@ -5,14 +5,15 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   session: Session;
-  currentView: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables';
-  onChangeView: (view: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables') => void;
+  currentView: 'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables';
+  onChangeView: (view: 'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables') => void;
   theme?: 'light' | 'dark' | 'sunset';
   onChangeTheme?: (t: 'light' | 'dark' | 'sunset') => void;
   onSignOut: () => void;
 }
 
 import { ThemeSwitcher } from '../src/components/ThemeSwitcher';
+import { usePWAInstall } from '../src/hooks/usePWAInstall';
 
 export const Sidebar: React.FC<Props> = ({
   isOpen,
@@ -24,6 +25,7 @@ export const Sidebar: React.FC<Props> = ({
   theme,
   onChangeTheme
 }) => {
+  const { isInstallable, install } = usePWAInstall();
   const [dbTablesOpen, setDbTablesOpen] = useState(false);
   const userInitial = session.user.email?.charAt(0).toUpperCase() || 'U';
   const userName = session.user.user_metadata?.full_name || session.user.email;
@@ -65,8 +67,17 @@ export const Sidebar: React.FC<Props> = ({
                 : 'text-slate-600 hover:bg-slate-50'
                 }`}
             >
-              <i className="fa-solid fa-calendar w-5 text-center"></i>
-              <span>Calendar</span>
+              <i className="fa-solid fa-calendar-days text-lg w-6 text-center"></i>
+              <span className="font-bold">Calendario</span>
+            </button>
+
+            <button
+              onClick={() => { onChangeView('stats'); onClose(); }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all ${currentView === 'stats' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+              <i className="fa-solid fa-chart-line text-lg w-6 text-center"></i>
+              <span className="font-bold">Análisis & Estadísticas</span>
             </button>
 
             <div className="pt-4 mt-4 border-t border-slate-100">
@@ -112,12 +123,30 @@ export const Sidebar: React.FC<Props> = ({
 
           {/* Footer */}
           <div className="p-4 border-t border-slate-100">
+            {isInstallable && (
+              <div className="mb-4 p-5 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl text-white shadow-xl shadow-indigo-100 flex flex-col space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                    <i className="fa-solid fa-mobile-screen text-sm"></i>
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-wider">Modo App</span>
+                </div>
+                <p className="text-[10px] leading-relaxed text-indigo-100 font-medium">Instala Shifter para acceso offline y pantalla completa.</p>
+                <button
+                  onClick={install}
+                  className="bg-white text-indigo-600 font-black py-2.5 rounded-xl text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
+                >
+                  Instalar en el móvil
+                </button>
+              </div>
+            )}
+
             <button
               onClick={onSignOut}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors font-medium"
             >
               <i className="fa-solid fa-right-from-bracket"></i>
-              <span>Sign Out</span>
+              <span>Cerrar Sesión</span>
             </button>
             <p className="text-center text-[10px] text-slate-300 mt-4">
               Shifter PWA v1.1.0

@@ -1,135 +1,86 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from './src/data/supabaseClient';
 import { Calendar } from './components/Calendar';
-import { ShiftPalette } from './components/ShiftPalette';
-import { EditShiftModal } from './components/EditShiftModal';
-import { DatePickerModal } from './components/DatePickerModal';
-import { LoginScreen } from './components/LoginScreen';
 import { Sidebar } from './components/Sidebar';
+import { ShiftPalette } from './components/ShiftPalette';
+import { MonthPicker } from './src/components/MonthPicker';
+import './App.css';
 import './src/styles/themes.css';
 import { ShiftManager } from './components/ShiftManager';
 import { DatabaseCRUD } from './components/DatabaseCRUD';
-import { TablesOverview } from './components/TablesOverview';
+import { StatisticsView } from './components/StatisticsView';
 import { ShiftType, DayAssignment, Holiday } from './types';
 import { storageService } from './services/storage';
 import { formatDateKey } from './helpers';
-import { supabase, signOut } from './src/data/supabaseClient';
 import { Session } from '@supabase/supabase-js';
 
-// Dummy session generator for Guest Mode
-const createGuestSession = (): Session => ({
-  access_token: 'guest-token',
-  refresh_token: 'guest-refresh',
-  expires_in: 3600,
-  token_type: 'bearer',
-  user: {
-    id: 'guest-user-local',
-    aud: 'authenticated',
-    role: 'authenticated',
-    email: 'guest@demo.local',
-    email_confirmed_at: new Date().toISOString(),
-    phone: '',
-    confirmation_sent_at: '',
-    confirmed_at: '',
-    last_sign_in_at: '',
-    app_metadata: { provider: 'email' },
-    user_metadata: {
-      avatar_url: '',
-      full_name: 'Guest User'
-    },
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-});
-
-const App: React.FC = () => {
-  // Auth State
+function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
-  const [currentView, setCurrentView] = useState<'calendar' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables'>('calendar');
+  const [currentView, setCurrentView] = useState<'calendar' | 'stats' | 'db_profiles' | 'db_shift_types' | 'db_holidays' | 'db_tables'>('calendar');
   const [theme, setTheme] = useState<'light' | 'dark' | 'sunset'>('light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [shiftTypes, setShiftTypes] = useState<ShiftType[]>([]);
   const [assignments, setAssignments] = useState<Record<string, DayAssignment>>({});
-  const [selectedShiftTypeId, setSelectedShiftTypeId] = useState<string | null>(null);
+  const [selectedShiftTypeId, setSelectedShiftTypeId] = useState<string | null>(null); // Null = Navigation Mode
   const [holidays, setHolidays] = useState<Record<string, Holiday>>({});
 
   const [isPainting, setIsPainting] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingShift, setEditingShift] = useState<ShiftType | null>(null); // For edit modal
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [profileId, setProfileId] = useState<string | null>(null);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
-  // 1. Initialize Auth
+  // Auth Listener
   useEffect(() => {
-    const initAuth = async () => {
-      const guestStored = localStorage.getItem('shifter_guest_mode');
-      if (guestStored === 'true') {
-        setSession(createGuestSession());
-        setAuthLoading(false);
-        return;
-      }
-
-      const { data: { session: supabaseSession } } = await supabase.auth.getSession();
-      if (supabaseSession) {
-        setSession(supabaseSession);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUserId(session?.user?.id || null);
       setAuthLoading(false);
-    };
-
-    initAuth();
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (localStorage.getItem('shifter_guest_mode') !== 'true') {
-        setSession(session);
-      }
+      setSession(session);
+      setUserId(session?.user?.id || null);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Load Data and Resolve Profile when Session Changes
+  // Sync Shift Types and Data from Supabase
   useEffect(() => {
-    if (session?.user) {
-      const userId = session.user.id;
-
-      // Fetch Shift Types from DB
+    if (session) {
       const fetchShifts = async () => {
         const { data, error } = await supabase.from('shift_types').select('*').order('name');
         if (data) {
           const mapped: ShiftType[] = data.map((s: any) => ({
             id: s.id,
             name: s.name,
-            code: s.name.charAt(0).toUpperCase(), // Using first char from name as code if not in DB
+            code: s.name.charAt(0).toUpperCase(),
             color: s.color || '#4f46e5',
             startTime: s.default_start?.substring(0, 5) || '',
-            endTime: s.default_end?.substring(0, 5) || ''
+            endTime: s.default_end?.substring(0, 5) || '',
+            default_duration: s.default_duration
           }));
           setShiftTypes(mapped);
-          if (mapped.length > 0 && !selectedShiftTypeId) {
-            setSelectedShiftTypeId(mapped[0].id);
-          }
         }
       };
 
-      setAssignments(storageService.getAssignments(userId));
-      fetchShifts();
-
-      // Fetch Holidays from DB
       const fetchHolidays = async () => {
         const { data } = await supabase.from('holidays').select('*');
         if (data) {
-          const holidayMap: Record<string, Holiday> = {};
-          data.forEach((h: Holiday) => {
-            holidayMap[h.date] = h;
+          const mapped: Record<string, Holiday> = {};
+          data.forEach((h: any) => {
+            mapped[h.date] = { date: h.date, name: h.name, country_code: h.country_code };
           });
-          setHolidays(holidayMap);
+          setHolidays(mapped);
         }
       };
 
+      fetchShifts();
       fetchHolidays();
 
       // Resolve Profile ID for DB sync and Sync Meta
@@ -138,7 +89,6 @@ const App: React.FC = () => {
 
         const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
 
-        // Upsert profile to ensure it exists and matches session metadata
         const { data: profile, error } = await supabase
           .from('profiles')
           .upsert({
@@ -153,32 +103,24 @@ const App: React.FC = () => {
       };
       resolveProfile();
     } else {
-      setShiftTypes([]);
-      setAssignments({});
-      setProfileId(null);
+      setShiftTypes(storageService.getShiftTypes());
     }
-  }, [session, currentView]); // Refresh when view changes back to calendar
 
-  // Persist and apply theme
-  useEffect(() => {
-    const saved = localStorage.getItem('shifter_theme') as 'light' | 'dark' | 'sunset' | null;
-    if (saved) setTheme(saved);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('shifter_theme', theme);
-  }, [theme]);
-
-  // Shift management is now handled by the Database Hub (CRUD)
+    if (userId) {
+      setAssignments(storageService.getAssignments(userId));
+    }
+  }, [session, userId, currentView]);
 
   const handlePaint = useCallback((date: Date) => {
-    if (!session?.user) return;
+    if (!session?.user || !selectedShiftTypeId) return;
+
     const key = formatDateKey(date);
+    const isEraser = selectedShiftTypeId === 'eraser';
 
     setAssignments((prev) => {
       const newAssignment: DayAssignment = {
         dateStr: key,
-        shiftTypeId: selectedShiftTypeId,
+        shiftTypeId: isEraser ? null : selectedShiftTypeId,
         note: prev[key]?.note
       };
       return { ...prev, [key]: newAssignment };
@@ -186,97 +128,83 @@ const App: React.FC = () => {
 
     const newAssignment: DayAssignment = {
       dateStr: key,
-      shiftTypeId: selectedShiftTypeId,
+      shiftTypeId: isEraser ? null : selectedShiftTypeId,
       note: assignments[key]?.note
     };
     storageService.saveAssignment(session.user.id, newAssignment);
 
-    // Database Sync: Upsert to 'days_assignments'
+    // Database Sync
     if (profileId && localStorage.getItem('shifter_guest_mode') !== 'true') {
       supabase.from('days_assignments').upsert({
         profile_id: profileId,
         date: key,
-        shift_type_id: selectedShiftTypeId,
+        shift_type_id: isEraser ? null : selectedShiftTypeId,
         note: assignments[key]?.note
       }, { onConflict: 'profile_id,date' }).then(({ error }) => {
         if (error) console.error('DB Sync Error:', error.message);
       });
     }
-  }, [selectedShiftTypeId, assignments, session, profileId]);
+  }, [session, userId, profileId, selectedShiftTypeId, assignments]);
 
-  const handleSignOut = async () => {
-    if (localStorage.getItem('shifter_guest_mode') === 'true') {
-      localStorage.removeItem('shifter_guest_mode');
-      setSession(null);
-    } else {
-      await signOut();
-    }
-    setIsMenuOpen(false);
+  const toggleTheme = () => {
+    const themes: ('light' | 'dark' | 'sunset')[] = ['light', 'dark', 'sunset'];
+    const next = themes[(themes.indexOf(theme) + 1) % themes.length];
+    setTheme(next);
+    localStorage.setItem('shifter_theme', next);
   };
 
-  const handleGuestLogin = () => {
-    localStorage.setItem('shifter_guest_mode', 'true');
-    setSession(createGuestSession());
-  };
+  if (authLoading) return <div className="h-screen w-screen flex items-center justify-center bg-slate-50"><i className="fa-solid fa-spinner fa-spin text-3xl text-indigo-500"></i></div>;
 
-  const handleThemeChange = (t: 'light' | 'dark' | 'sunset') => {
-    setTheme(t);
-  };
-
-  // --- RENDER ---
-
-  if (authLoading) {
+  if (!session) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-white">
-        <i className="fa-solid fa-circle-notch fa-spin text-indigo-600 text-2xl"></i>
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl p-8 text-center space-y-8 animate-scale-in">
+          <div className="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-100">
+            <i className="fa-solid fa-calendar-check text-4xl text-white"></i>
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Shifter</h1>
+            <p className="text-slate-500 font-medium">Gestiona tu calendario laboral con estilo.</p>
+          </div>
+          <button
+            onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })}
+            className="w-full flex items-center justify-center space-x-3 bg-white border-2 border-slate-100 hover:border-indigo-500 hover:bg-slate-50 transition-all p-4 rounded-2xl font-bold text-slate-700 shadow-sm overflow-hidden relative group"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/listbox/google.svg" className="w-6 h-6" alt="Google" />
+            <span>Continuar con Google</span>
+          </button>
+        </div>
       </div>
     );
   }
 
-  if (!session) {
-    return <LoginScreen onGuestLogin={handleGuestLogin} />;
-  }
-
-  const activeShiftColor = shiftTypes.find(s => s.id === selectedShiftTypeId)?.color || '';
-
   return (
-    <div
-      className="h-full flex flex-col bg-white overflow-hidden app"
-      data-theme={theme}
-      style={{
-        cursor: selectedShiftTypeId ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' style='fill:${activeShiftColor.replace('#', '%23')} opacity:0.8;'><circle cx='16' cy='16' r='12'/></svg>") 16 16, pointer` : 'default'
-      }}
-    >
-      {/* Sidebar Navigation */}
+    <div className="h-screen w-screen overflow-hidden flex flex-col md:flex-row bg-[#F1F5F9]" data-theme={theme}>
       <Sidebar
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         session={session}
         currentView={currentView}
         onChangeView={setCurrentView}
-        onSignOut={handleSignOut}
         theme={theme}
-        onChangeTheme={handleThemeChange}
+        onChangeTheme={setTheme}
+        onSignOut={() => supabase.auth.signOut()}
       />
 
-      {/* Main App Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden transition-all duration-300">
+      <main className="flex-1 flex flex-col relative overflow-hidden bg-white md:m-3 md:rounded-[2.5rem] shadow-2xl shadow-slate-200/50">
 
-        {/* VIEW: CALENDAR */}
         {currentView === 'calendar' && (
           <>
-            {/* Header */}
-            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] z-30 relative shrink-0">
-              <div className="flex items-center">
+            <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between z-30 shrink-0">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={() => setIsMenuOpen(true)}
-                  className="w-10 h-10 -ml-2 mr-1 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 hover:text-indigo-600 transition-all active:scale-90"
                 >
-                  <i className="fa-solid fa-bars text-lg"></i>
+                  <i className="fa-solid fa-bars-staggered text-xl"></i>
                 </button>
-
                 <button
-                  onClick={() => setIsDatePickerOpen(true)}
+                  onClick={() => setIsMonthPickerOpen(true)}
                   className="flex items-center space-x-2 pl-1 pr-3 py-1 rounded-xl hover:bg-slate-50 transition-colors group"
                 >
                   <h1 className="text-xl font-bold text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
@@ -317,13 +245,30 @@ const App: React.FC = () => {
               shiftTypes={shiftTypes}
               selectedId={selectedShiftTypeId}
               onSelect={setSelectedShiftTypeId}
-              onEdit={() => {
-                setCurrentView('db_shift_types');
-              }}
+              onEdit={() => setCurrentView('db_shift_types')}
             />
           </>
         )}
 
+        {currentView === 'stats' && (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <header className="px-6 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center z-30 shrink-0">
+              <button
+                onClick={() => setIsMenuOpen(true)}
+                className="w-10 h-10 -ml-2 mr-4 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-50 transition-all"
+              >
+                <i className="fa-solid fa-bars-staggered text-xl"></i>
+              </button>
+              <h1 className="text-xl font-bold text-slate-800">Estadísticas</h1>
+            </header>
+            <StatisticsView
+              currentDate={currentDate}
+              assignments={assignments}
+              shiftTypes={shiftTypes}
+              holidays={holidays}
+            />
+          </div>
+        )}
 
         {/* CRUD VIEWS with Navigation Header */}
         {[
@@ -344,31 +289,18 @@ const App: React.FC = () => {
             <DatabaseCRUD tableName={view.table} title={view.title} userId={session.user.id} />
           </div>
         ))}
+      </main>
 
-        {currentView === 'db_tables' && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <header className="px-4 py-3 bg-white border-b border-slate-200 flex items-center shadow-sm z-30 relative shrink-0">
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="w-10 h-10 -ml-2 mr-2 flex items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-              >
-                <i className="fa-solid fa-bars text-lg"></i>
-              </button>
-              <h1 className="text-lg font-bold text-slate-800">Database Hub</h1>
-            </header>
-            <TablesOverview onBack={() => setCurrentView('calendar')} userId={session.user.id} />
-          </div>
-        )}
-      </div>
-
-      <DatePickerModal
-        isOpen={isDatePickerOpen}
-        currentDate={currentDate}
-        onClose={() => setIsDatePickerOpen(false)}
-        onSelect={setCurrentDate}
-      />
+      {isMonthPickerOpen && (
+        <MonthPicker
+          isOpen={isMonthPickerOpen}
+          onClose={() => setIsMonthPickerOpen(false)}
+          currentDate={currentDate}
+          onChange={setCurrentDate}
+        />
+      )}
     </div>
   );
-};
+}
 
 export default App;

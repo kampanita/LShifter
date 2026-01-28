@@ -17,12 +17,21 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        },
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
         manifest: {
           name: 'Shifter - Calendario Laboral',
           short_name: 'Shifter',
           description: 'Gestión profesional de turnos y calendario',
           theme_color: '#6366f1',
+          background_color: '#ffffff',
+          display: 'standalone',
+          orientation: 'portrait',
+          scope: `/${repoName}/`,
+          start_url: `/${repoName}/`,
           icons: [
             {
               src: 'pwa-192x192.png',
