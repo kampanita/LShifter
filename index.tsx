@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import * as serviceWorker from './src/serviceWorker';
+import { registerSW } from 'virtual:pwa-register';
+
+// Register PWA service worker with auto-update
+registerSW({ immediate: true });
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,6 +17,3 @@ root.render(
     <App />
   </React.StrictMode>
 );
-
-// Register the service worker for PWA functionality
-serviceWorker.register();
