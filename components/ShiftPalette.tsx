@@ -15,6 +15,7 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
         {/* Navigation / Selection Tool */}
         <button
           onClick={() => onSelect(null)}
+          title="Modo Navegación: Consulta el calendario sin hacer cambios"
           className={`
             flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-2xl border-2 transition-all
             ${selectedId === null
@@ -29,6 +30,7 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
         {/* Eraser Tool */}
         <button
           onClick={() => onSelect('eraser')}
+          title="Borrador: Toca días para eliminar su turno"
           className={`
             flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-2xl border-2 transition-all
             ${selectedId === 'eraser'
@@ -47,6 +49,7 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
           <button
             key={shift.id}
             onClick={() => onSelect(shift.id)}
+            title={`${shift.name}: ${shift.startTime} - ${shift.endTime}`}
             className={`
               flex-shrink-0 flex flex-col items-center justify-center w-14 h-14 rounded-2xl border-2 transition-all relative overflow-hidden active:scale-95
               ${selectedId === shift.id
@@ -56,8 +59,8 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
             style={{ backgroundColor: shift.color }}
           >
             <span className="text-lg font-black text-white drop-shadow-md">{shift.code}</span>
-            <span className="text-[8px] text-white/90 font-bold truncate w-full text-center px-1">
-              {shift.startTime}
+            <span className="text-[7px] text-white/90 font-black truncate w-full text-center px-1 leading-none uppercase">
+              {shift.startTime}-{shift.endTime}
             </span>
             {selectedId === shift.id && (
               <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
@@ -70,14 +73,32 @@ export const ShiftPalette: React.FC<Props> = ({ shiftTypes, selectedId, onSelect
         <button
           onClick={onEdit}
           className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-white hover:text-indigo-600 border border-slate-100 transition-all shadow-sm active:scale-90"
-          title="Editar Turnos"
+          title="Configurar Turnos"
         >
           <i className="fa-solid fa-sliders"></i>
         </button>
       </div>
 
-      <div className="text-center text-xs text-slate-400 mt-1">
-        {selectedId ? 'Tap or drag on dates to paint' : 'Tap dates to erase'}
+      <div className="text-center mt-2 flex items-center justify-center space-x-2">
+        {selectedId === null && (
+          <div className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <i className="fa-solid fa-arrow-pointer mr-2"></i>
+            Modo Navegación (Sin cambios)
+          </div>
+        )}
+        {selectedId === 'eraser' && (
+          <div className="bg-rose-50 text-rose-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse border border-rose-100">
+            <i className="fa-solid fa-eraser mr-2"></i>
+            Borrador Activo
+          </div>
+        )}
+        {selectedId && selectedId !== 'eraser' && (
+          <div className="flex items-center bg-indigo-50 text-indigo-700 px-4 py-1.5 rounded-full text-[11px] font-bold border border-indigo-100 shadow-sm">
+            <div className="w-3 h-3 rounded-full mr-2 shadow-sm" style={{ backgroundColor: shiftTypes.find(s => s.id === selectedId)?.color }}></div>
+            Pintando: <span className="ml-1 font-black uppercase">{shiftTypes.find(s => s.id === selectedId)?.name}</span>
+            <span className="ml-2 text-[9px] opacity-60 font-medium">({shiftTypes.find(s => s.id === selectedId)?.startTime} - {shiftTypes.find(s => s.id === selectedId)?.endTime})</span>
+          </div>
+        )}
       </div>
     </div>
   );
