@@ -7,8 +7,12 @@ interface Props {
   session: Session;
   currentView: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables';
   onChangeView: (view: 'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables') => void;
+  theme?: 'light' | 'dark' | 'sunset';
+  onChangeTheme?: (t: 'light' | 'dark' | 'sunset') => void;
   onSignOut: () => void;
 }
+
+import { ThemeSwitcher } from '../src/components/ThemeSwitcher';
 
 export const Sidebar: React.FC<Props> = ({
   isOpen,
@@ -16,7 +20,9 @@ export const Sidebar: React.FC<Props> = ({
   session,
   currentView,
   onChangeView,
-  onSignOut
+  onSignOut,
+  theme,
+  onChangeTheme
 }) => {
   const [dbTablesOpen, setDbTablesOpen] = useState(false);
   const userInitial = session.user.email?.charAt(0).toUpperCase() || 'U';
@@ -132,8 +138,14 @@ export const Sidebar: React.FC<Props> = ({
             <p className="text-center text-[10px] text-slate-300 mt-4">
               Shifter PWA v1.1.0
             </p>
-          </div>
-        </div>
+              </div>
+            </div>
+            <div className="pt-4 pb-4 border-t border-slate-100 px-4">
+              <p className="px-0 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Look & Feel</p>
+              <div className="px-0 pb-2">
+                <ThemeSwitcher current={theme ?? 'light'} onChange={onChangeTheme ?? (() => {})} />
+              </div>
+            </div>
       </div>
     </>
   );

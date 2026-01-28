@@ -5,6 +5,7 @@ import { EditShiftModal } from './components/EditShiftModal';
 import { DatePickerModal } from './components/DatePickerModal';
 import { LoginScreen } from './components/LoginScreen';
 import { Sidebar } from './components/Sidebar';
+import './src/styles/themes.css';
 import { ShiftManager } from './components/ShiftManager';
 import { DatabaseCRUD } from './components/DatabaseCRUD';
 import { TablesOverview } from './components/TablesOverview';
@@ -47,6 +48,7 @@ const App: React.FC = () => {
 
   // App State
   const [currentView, setCurrentView] = useState<'calendar' | 'admin' | 'db_profiles' | 'db_shift_types' | 'db_days_assignments' | 'db_holidays' | 'db_notes' | 'db_tables'>('calendar');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'sunset'>('light');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -103,6 +105,16 @@ const App: React.FC = () => {
       setAssignments({});
     }
   }, [session]);
+
+  // Persist and apply theme
+  useEffect(() => {
+    const saved = localStorage.getItem('shifter_theme') as 'light' | 'dark' | 'sunset' | null;
+    if (saved) setTheme(saved);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('shifter_theme', theme);
+  }, [theme]);
 
   // CRUD Operations
   const handleSaveShift = (shiftData: ShiftType) => {
@@ -171,6 +183,10 @@ const App: React.FC = () => {
     setSession(createGuestSession());
   };
 
+  const handleThemeChange = (t: 'light' | 'dark' | 'sunset') => {
+    setTheme(t);
+  };
+
   // --- RENDER ---
 
   if (authLoading) {
@@ -186,7 +202,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white overflow-hidden app" data-theme={theme}>
       {/* Sidebar Navigation */}
       <Sidebar
         isOpen={isMenuOpen}
@@ -195,6 +211,8 @@ const App: React.FC = () => {
         currentView={currentView}
         onChangeView={setCurrentView}
         onSignOut={handleSignOut}
+        theme={theme}
+        onChangeTheme={handleThemeChange}
       />
 
       {/* Main App Content */}
