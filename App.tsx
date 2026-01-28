@@ -248,7 +248,7 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col md:flex-row bg-[#F1F5F9]" data-theme={theme}>
+    <div className="h-full w-full flex flex-col md:flex-row bg-[#F1F5F9]" data-theme={theme}>
       <Sidebar
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
@@ -260,7 +260,7 @@ function App() {
         onSignOut={() => supabase.auth.signOut()}
       />
 
-      <main className="flex-1 flex flex-col relative overflow-hidden bg-[#F1F5F9] md:p-3">
+      <main className="flex-1 flex flex-col relative bg-[#F1F5F9] md:p-3 overflow-hidden">
         <BezelFrame className="flex-1">
 
           {currentView === 'calendar' && (
