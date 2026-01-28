@@ -51,16 +51,16 @@ export const Calendar: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#F1F5F9] select-none">
-      <div className="p-2 md:p-8 flex-1 flex flex-col">
+    <div className="select-none bg-[#F1F5F9]">
+      <div className="p-2 md:p-8 flex flex-col">
         {/* RESTORED DARK PANEL INSIDE LIGHT BACKGROUND */}
-        <div className="flex-1 flex flex-col bg-[#0b121e] rounded-[1.2rem] md:rounded-[2rem] border border-[#1e293b] shadow-2xl overflow-hidden relative">
+        <div className="flex flex-col bg-[#0b121e] rounded-[1.2rem] md:rounded-[2rem] border border-[#1e293b] shadow-2xl overflow-hidden relative">
 
           {/* HEADER BAR */}
           <div className="h-1 bg-gradient-to-r from-transparent via-[#00a8ff] to-transparent opacity-50 z-20"></div>
 
           {/* WEEK HEADER */}
-          <div className="grid grid-cols-7 pt-4 md:pt-8 pb-2 md:pb-4 bg-[#0f172a] border-b border-[#1e293b] sticky top-0 z-40 shrink-0">
+          <div className="grid grid-cols-7 pt-4 md:pt-8 pb-2 md:pb-4 bg-[#0f172a] border-b border-[#1e293b] sticky top-0 z-40">
             {daysOfWeek.map((day, index) => (
               <div
                 key={day}
@@ -79,7 +79,6 @@ export const Calendar: React.FC<Props> = ({
             className="grid grid-cols-7 p-1 md:p-3 gap-1 md:gap-2.5 pb-4"
             onPointerUp={() => setIsPainting(false)}
             onPointerLeave={() => setIsPainting(false)}
-            style={{ gridAutoRows: '1fr' }}
           >
             {Array.from({ length: paddingDays }).map((_, i) => (
               <div key={`padding-${i}`} className="opacity-0" />
@@ -98,9 +97,9 @@ export const Calendar: React.FC<Props> = ({
 
                 // RESTORED DARK TECH CELL COLORS
                 let cellBg = 'bg-[#161d2a]';
-                if (isHoliday) cellBg = 'bg-[#2d1b1e]'; // Distinct reddish dark for holidays
-                else if (isWeekend) cellBg = 'bg-[#1c2538]'; // Distinct blue-grey dark for weekends
-                if (isToday) cellBg = 'bg-[#1c2538]'; // Highlight today background slightly
+                if (isHoliday) cellBg = 'bg-[#2d1b1e]';
+                else if (isWeekend) cellBg = 'bg-[#1c2538]';
+                if (isToday) cellBg = 'bg-[#1c2538]';
 
                 return (
                   <motion.div
@@ -110,7 +109,7 @@ export const Calendar: React.FC<Props> = ({
                     className={`
                       relative flex flex-col items-center justify-center cursor-pointer transition-all duration-150 group
                       rounded-lg md:rounded-xl
-                      min-h-[90px] md:min-h-0
+                      min-h-[100px] md:min-h-[140px]
                       border-2
                       ${isToday ? 'border-[#00a8ff]' : (isHoliday ? 'border-[#ff4757]/40' : 'border-[#2d3748]')}
                       ${cellBg}

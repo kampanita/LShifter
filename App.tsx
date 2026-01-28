@@ -174,34 +174,41 @@ function App() {
 
     const key = formatDateKey(date);
     const isEraser = selectedShiftTypeId === 'eraser';
+    const shiftToSet = isEraser ? null : selectedShiftTypeId;
 
     setAssignments((prev) => {
       const newAssignment: DayAssignment = {
         dateStr: key,
-        shiftTypeId: isEraser ? null : selectedShiftTypeId,
+        shiftTypeId: shiftToSet,
         note: prev[key]?.note
       };
       return { ...prev, [key]: newAssignment };
     });
 
-    const newAssignment: DayAssignment = {
-      dateStr: key,
-      shiftTypeId: isEraser ? null : selectedShiftTypeId,
-      note: assignments[key]?.note
-    };
-    storageService.saveAssignment(session.user.id, newAssignment);
-
-    // Database Sync
+    // Database Sync - Using calculated values directly
     if (profileId && localStorage.getItem('shifter_guest_mode') !== 'true') {
       supabase.from('days_assignments').upsert({
         profile_id: profileId,
         date: key,
-        shift_type_id: isEraser ? null : selectedShiftTypeId,
-        note: assignments[key]?.note
+        shift_type_id: shiftToSet,
+        note: assignments[key]?.note // Keep existing note if any
       }, { onConflict: 'profile_id,date' }).then(({ error }) => {
-        if (error) console.error('DB Sync Error:', error.message);
+        if (error) {
+          console.error('DB Sync Error:', error.message);
+        } else {
+          console.log(`✅ Persisted ${key} as ${shiftToSet}`);
+        }
       });
     }
+
+    // Backup to local storage
+    const tempAssignment: DayAssignment = {
+      dateStr: key,
+      shiftTypeId: shiftToSet,
+      note: assignments[key]?.note
+    };
+    storageService.saveAssignment(session.user.id, tempAssignment);
+
   }, [session, userId, profileId, selectedShiftTypeId, assignments]);
 
   const toggleTheme = () => {
