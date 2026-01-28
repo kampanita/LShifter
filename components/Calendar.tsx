@@ -51,7 +51,6 @@ export const Calendar: React.FC<Props> = ({
   };
 
   return (
-  return (
     <div className="flex-1 flex flex-col bg-[#F1F5F9] select-none min-h-0 relative">
       <div className="flex-1 flex flex-col p-2 md:p-4 min-h-0">
         {/* DARK PANEL WRAPPER */}
