@@ -277,9 +277,9 @@ function App() {
                 </div>
               </header>
 
-              <div className="flex-1 overflow-y-auto">
-                <div className="flex flex-col min-h-full">
-                  <div className="flex-1">
+              <div className="flex-1 overflow-hidden flex flex-col relative min-h-0">
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex-1 flex flex-col min-h-0 relative">
                     <Calendar
                       currentDate={currentDate}
                       assignments={assignments}
