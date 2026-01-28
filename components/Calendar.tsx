@@ -27,6 +27,13 @@ export const Calendar: React.FC<Props> = ({
   const days = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
   const paddingDays = useMemo(() => getPaddingDays(currentDate), [currentDate]);
 
+  // DEBUG: Log holidays
+  React.useEffect(() => {
+    console.log("🎄 CALENDAR - Holidays received:", holidays);
+    console.log("🎄 CALENDAR - Holiday keys:", Object.keys(holidays));
+    console.log("🎄 CALENDAR - Current month:", currentDate.getMonth() + 1, currentDate.getFullYear());
+  }, [holidays, currentDate]);
+
   const daysOfWeek = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const today = new Date();
 
@@ -95,6 +102,11 @@ export const Calendar: React.FC<Props> = ({
               const dateKey = formatDateKey(date);
               const holiday = holidays[dateKey];
               const isHoliday = !!holiday;
+
+              // DEBUG: Log first 3 days and any holidays found
+              if (index < 3 || isHoliday) {
+                console.log(`📅 Day ${date.getDate()}: dateKey="${dateKey}", holiday=`, holiday, `isHoliday=${isHoliday}`);
+              }
 
               const dayOfWeek = date.getDay();
               const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;

@@ -254,31 +254,33 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                     <div className="h-full flex flex-col items-center justify-center opacity-30"><i className="fa-solid fa-spinner fa-spin text-4xl mb-2"></i><p className="text-xs font-bold uppercase tracking-widest">Synchronizing...</p></div>
                 ) : viewMode === 'grid' ? (
                     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100">
-                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
-                                    {tableDef.fields.filter(f => !f.hiddenInView).map(f => <th key={f.name} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{f.label}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {data.map(item => (
-                                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex space-x-2">
-                                                <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"><i className="fa-solid fa-pen text-[10px]"></i></button>
-                                                <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i className="fa-solid fa-trash text-[10px]"></i></button>
-                                            </div>
-                                        </td>
-                                        {tableDef.fields.filter(f => !f.hiddenInView).map(f => (
-                                            <td key={f.name} className="px-6 py-4 text-sm font-medium text-slate-600">
-                                                {f.type === 'color' ? <div className="flex items-center space-x-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: item[f.name] }}></div><span className="font-mono text-xs">{item[f.name]}</span></div> : String(item[f.name] ?? '--')}
-                                            </td>
-                                        ))}
+                        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="sticky top-0 bg-slate-50 z-10">
+                                    <tr className="border-b border-slate-100">
+                                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                        {tableDef.fields.filter(f => !f.hiddenInView).map(f => <th key={f.name} className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{f.label}</th>)}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {data.map(item => (
+                                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex space-x-2">
+                                                    <button onClick={() => { setEditingItem(item); setIsFormOpen(true); }} className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-colors"><i className="fa-solid fa-pen text-[10px]"></i></button>
+                                                    <button onClick={() => handleDelete(item.id)} className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i className="fa-solid fa-trash text-[10px]"></i></button>
+                                                </div>
+                                            </td>
+                                            {tableDef.fields.filter(f => !f.hiddenInView).map(f => (
+                                                <td key={f.name} className="px-6 py-4 text-sm font-medium text-slate-600">
+                                                    {f.type === 'color' ? <div className="flex items-center space-x-2"><div className="w-4 h-4 rounded-full" style={{ backgroundColor: item[f.name] }}></div><span className="font-mono text-xs">{item[f.name]}</span></div> : String(item[f.name] ?? '--')}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -311,28 +313,30 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                             <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{editingItem.id ? 'Edit Entry' : 'New Entry'}</h3>
                             <button onClick={() => setIsFormOpen(false)} className="text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark text-xl"></i></button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-5 max-h-[60vh] overflow-y-auto">
-                            {tableDef.fields.map(f => (
-                                <div key={f.name} className="space-y-1">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{f.label}</label>
-                                    {f.type === 'color' ? (
-                                        <div className="flex items-center space-x-3">
-                                            <input type="color" className="w-12 h-12 rounded-xl cursor-pointer" value={editingItem[f.name] || '#6366f1'} onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })} />
-                                            <input type="text" className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-mono text-xs" value={editingItem[f.name] || '#6366f1'} onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })} />
-                                        </div>
-                                    ) : (
-                                        <input
-                                            type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : f.type === 'time' ? 'time' : 'text'}
-                                            readOnly={f.readOnly}
-                                            className={`w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:bg-white outline-none transition-all ${f.readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            value={editingItem[f.name] ?? ''}
-                                            onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })}
-                                        />
-                                    )}
-                                    {f.name === 'default_duration' && <p className="text-[10px] text-indigo-400 italic font-medium ml-1">Autocalculated upon save.</p>}
-                                </div>
-                            ))}
-                        </form>
+                        <div className="p-8 space-y-5 max-h-[60vh] overflow-y-auto">
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                {tableDef.fields.map(f => (
+                                    <div key={f.name} className="space-y-1">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{f.label}</label>
+                                        {f.type === 'color' ? (
+                                            <div className="flex items-center space-x-3">
+                                                <input type="color" className="w-12 h-12 rounded-xl cursor-pointer" value={editingItem[f.name] || '#6366f1'} onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })} />
+                                                <input type="text" className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-mono text-xs" value={editingItem[f.name] || '#6366f1'} onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })} />
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : f.type === 'time' ? 'time' : 'text'}
+                                                readOnly={f.readOnly}
+                                                className={`w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:bg-white outline-none transition-all ${f.readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                value={editingItem[f.name] ?? ''}
+                                                onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })}
+                                            />
+                                        )}
+                                        {f.name === 'default_duration' && <p className="text-[10px] text-indigo-400 italic font-medium ml-1">Autocalculated upon save.</p>}
+                                    </div>
+                                ))}
+                            </form>
+                        </div>
                         <div className="p-8 flex space-x-4">
                             <button type="button" onClick={() => setIsFormOpen(false)} className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-400 bg-slate-50 hover:bg-slate-100">Cancel</button>
                             <button type="submit" onClick={handleSubmit} className="flex-[1.5] px-6 py-4 rounded-2xl font-bold text-white bg-indigo-600 shadow-xl shadow-indigo-100">Save Row</button>
