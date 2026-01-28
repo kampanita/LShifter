@@ -1,3 +1,4 @@
+echo Deploying
 @echo off
 setlocal enabledelayedexpansion
 
