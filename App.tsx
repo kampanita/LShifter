@@ -12,6 +12,8 @@ import { formatDateKey } from './helpers';
 import { Session } from '@supabase/supabase-js';
 import { BezelFrame, ShifterLogo } from './components/VisualEffects';
 import { storageService } from './services/storage';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Login3DBackground } from './components/Login3DBackground';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -183,17 +185,29 @@ function App() {
 
   if (!session) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#F8FAFC] px-4">
-        <div className="max-w-md w-full bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1),inset_0_1px_1px_white] p-10 text-center space-y-8 animate-scale-in border border-slate-100">
+      <div className="h-screen w-screen flex items-center justify-center bg-[#F8FAFC] px-4 relative overflow-hidden">
+        <Login3DBackground />
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1),inset_0_1px_1px_white] p-10 text-center space-y-8 border border-slate-100 relative z-10"
+        >
           <div className="relative inline-block">
-            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
+            <motion.div
+              animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20"
+            ></motion.div>
             <ShifterLogo className="w-24 h-24 relative" />
           </div>
           <div>
             <h1 className="text-4xl font-black text-slate-800 tracking-tighter mb-2">Shifter</h1>
             <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Work Life In Sync</p>
           </div>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => supabase.auth.signInWithOAuth({
               provider: 'google',
               options: {
@@ -204,8 +218,8 @@ function App() {
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/listbox/google.svg" className="w-6 h-6" alt="Google" />
             <span>Continuar con Google</span>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }

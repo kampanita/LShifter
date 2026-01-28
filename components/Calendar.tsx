@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ShiftType, DayAssignment, Holiday } from '../types';
 import { getDaysInMonth, getPaddingDays, formatDateKey, isSameDay } from '../helpers';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
   currentDate: Date;
@@ -87,82 +88,99 @@ export const Calendar: React.FC<Props> = ({
             <div key={`padding-${i}`} className="bg-slate-50/30 border-r border-b border-slate-50" />
           ))}
 
-          {days.map((date) => {
-            const shift = getShiftForDate(date);
-            const isToday = isSameDay(date, today);
-            const dateKey = formatDateKey(date);
-            const holiday = holidays[dateKey];
-            const isHoliday = !!holiday;
+          <AnimatePresence mode="popLayout">
+            {days.map((date, index) => {
+              const shift = getShiftForDate(date);
+              const isToday = isSameDay(date, today);
+              const dateKey = formatDateKey(date);
+              const holiday = holidays[dateKey];
+              const isHoliday = !!holiday;
 
-            const dayOfWeek = date.getDay();
-            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+              const dayOfWeek = date.getDay();
+              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-            let cellBg = 'bg-transparent';
-            if (isToday) cellBg = 'bg-indigo-100/40';
-            else if (isHoliday) cellBg = 'bg-rose-100/50';
-            else if (isWeekend) cellBg = 'bg-rose-50';
+              let cellBg = 'bg-transparent';
+              if (isToday) cellBg = 'bg-indigo-100/40';
+              else if (isHoliday) cellBg = 'bg-rose-100/50';
+              else if (isWeekend) cellBg = 'bg-rose-50';
 
-            return (
-              <div
-                key={dateKey}
-                className={`
-                  relative border-r border-b border-slate-200/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
-                  min-h-[70px] md:min-h-0
-                  ${cellBg}
-                  hover:bg-white hover:shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]
-                `}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  handlePointerDown(date);
-                }}
-                onPointerEnter={() => handlePointerEnter(date)}
-              >
-                {/* DAY NUMBER - Smaller on mobile */}
-                <div
+              return (
+                <motion.div
+                  key={dateKey}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: (index % 7) * 0.05 + Math.floor(index / 7) * 0.02 }}
                   className={`
-                    absolute top-1.5 md:top-3 left-2 md:left-4 text-xs md:text-sm font-black transition-all z-10
-                    ${isToday ? 'text-indigo-600 scale-110' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-amber-600/70' : 'text-slate-600'))}
-                    ${shift ? 'opacity-40 group-hover:opacity-100' : ''}
+                    relative border-r border-b border-slate-200/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
+                    min-h-[70px] md:min-h-0
+                    ${cellBg}
+                    hover:bg-white hover:shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]
                   `}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    handlePointerDown(date);
+                  }}
+                  onPointerEnter={() => handlePointerEnter(date)}
                 >
-                  {date.getDate()}
-                  {isToday && <div className="w-1 h-1 bg-indigo-600 rounded-full mx-auto mt-0.5 animate-bounce"></div>}
-                </div>
-
-                {/* HOLIDAY RIBBON - Premium 3D Effect */}
-                {isHoliday && (
-                  <div className="absolute top-0 right-0 overflow-hidden w-12 md:w-24 h-12 md:h-24 pointer-events-none z-20">
-                    <div className="absolute top-2 md:top-5 -right-6 md:-right-8 w-24 md:w-36 bg-gradient-to-r from-rose-500 via-rose-600 to-rose-700 text-white text-[6px] md:text-[10px] font-black uppercase tracking-widest text-center py-1 md:py-2 rotate-45 shadow-[0_4px_8px_rgba(0,0,0,0.3)] border-y border-rose-400/30">
-                      {holiday.name}
-                    </div>
-                  </div>
-                )}
-
-                {/* SHIFT CONTENT - Responsive sizes */}
-                {shift ? (
+                  {/* DAY NUMBER - Smaller on mobile */}
                   <div
-                    className="w-[85%] h-[75%] rounded-xl md:rounded-2xl flex flex-col items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 active:scale-95 animate-scale-in relative overflow-hidden"
-                    style={{ backgroundColor: shift.color, border: '2px md:border-3 solid white' }}
+                    className={`
+                      absolute top-1.5 md:top-3 left-2 md:left-4 text-xs md:text-sm font-black transition-all z-10
+                      ${isToday ? 'text-indigo-600 scale-110' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-amber-600/70' : 'text-slate-600'))}
+                      ${shift ? 'opacity-40 group-hover:opacity-100' : ''}
+                    `}
                   >
-                    <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
-                    <span className="text-sm md:text-2xl font-black text-white drop-shadow-md">{shift.code}</span>
-                    <div className="flex items-center space-x-1 mt-0.5">
-                      <i className="fa-solid fa-clock text-[6px] md:text-[8px] text-white/70"></i>
-                      <span className="text-[7px] md:text-[9px] text-white font-bold tracking-tight">{shift.startTime}</span>
-                    </div>
-                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                    {date.getDate()}
+                    {isToday && <div className="w-1 h-1 bg-indigo-600 rounded-full mx-auto mt-0.5 animate-bounce"></div>}
                   </div>
-                ) : (
-                  <div className="w-full h-full opacity-0 group-hover:opacity-10 transition-opacity bg-indigo-500 rounded-xl md:rounded-2xl scale-90" />
-                )}
 
-                {/* TODAY PULSE */}
-                {isToday && !shift && (
-                  <div className="absolute inset-2 md:inset-4 rounded-xl md:rounded-3xl border md:border-2 border-indigo-200/50 animate-pulse border-dashed pointer-events-none"></div>
-                )}
-              </div>
-            );
-          })}
+                  {/* HOLIDAY RIBBON - Premium 3D Effect */}
+                  {isHoliday && (
+                    <motion.div
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      className="absolute top-0 right-0 overflow-hidden w-12 md:w-24 h-12 md:h-24 pointer-events-none z-20"
+                    >
+                      <div className="absolute top-2 md:top-5 -right-6 md:-right-8 w-24 md:w-36 bg-gradient-to-r from-rose-500 via-rose-600 to-rose-700 text-white text-[6px] md:text-[10px] font-black uppercase tracking-widest text-center py-1 md:py-2 rotate-45 shadow-[0_4px_8px_rgba(0,0,0,0.3)] border-y border-rose-400/30">
+                        {holiday.name}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* SHIFT CONTENT - Responsive sizes */}
+                  <AnimatePresence mode="wait">
+                    {shift ? (
+                      <motion.div
+                        key={shift.id}
+                        initial={{ scale: 0, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 10 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="w-[85%] h-[75%] rounded-xl md:rounded-2xl flex flex-col items-center justify-center shadow-lg relative overflow-hidden"
+                        style={{ backgroundColor: shift.color, border: '2px md:border-3 solid white' }}
+                      >
+                        <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
+                        <span className="text-sm md:text-2xl font-black text-white drop-shadow-md">{shift.code}</span>
+                        <div className="flex items-center space-x-1 mt-0.5">
+                          <i className="fa-solid fa-clock text-[6px] md:text-[8px] text-white/70"></i>
+                          <span className="text-[7px] md:text-[9px] text-white font-bold tracking-tight">{shift.startTime}</span>
+                        </div>
+                        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                      </motion.div>
+                    ) : (
+                      <div className="w-full h-full opacity-0 group-hover:opacity-10 transition-opacity bg-indigo-500 rounded-xl md:rounded-2xl scale-90" />
+                    )}
+                  </AnimatePresence>
+
+                  {/* TODAY PULSE */}
+                  {isToday && !shift && (
+                    <div className="absolute inset-2 md:inset-4 rounded-xl md:rounded-3xl border md:border-2 border-indigo-200/50 animate-pulse border-dashed pointer-events-none"></div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
 
         {/* BOTTOM PAGE CURVE EFFECT */}
