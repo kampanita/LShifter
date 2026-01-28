@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ShiftType, DayAssignment, Holiday } from '../types';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { getDaysInMonth, formatDateKey } from '../helpers';
 
 interface Props {
     currentDate: Date;
@@ -11,9 +11,7 @@ interface Props {
 
 export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shiftTypes, holidays }) => {
     const stats = useMemo(() => {
-        const monthStart = startOfMonth(currentDate);
-        const monthEnd = endOfMonth(currentDate);
-        const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+        const days = getDaysInMonth(currentDate);
 
         let totalHours = 0;
         let shiftCounts: Record<string, number> = {};
@@ -21,7 +19,7 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
         let weekendShifts = 0;
 
         days.forEach(day => {
-            const key = format(day, 'yyyy-MM-dd');
+            const key = formatDateKey(day);
             const assignment = assignments[key];
             if (assignment?.shiftTypeId) {
                 const shift = shiftTypes.find(s => s.id === assignment.shiftTypeId);
@@ -39,13 +37,15 @@ export const StatisticsView: React.FC<Props> = ({ currentDate, assignments, shif
         return { totalHours, shiftCounts, holidayShifts, weekendShifts, totalDays: days.length };
     }, [currentDate, assignments, shiftTypes, holidays]);
 
+    const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+
     return (
         <div className="flex-1 flex flex-col bg-[#F8FAFC] overflow-y-auto p-4 md:p-8 space-y-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-black text-slate-800 tracking-tight">Análisis de Datos</h2>
-                    <p className="text-slate-500 font-medium">Resumen estadístico de {format(currentDate, 'MMMM yyyy')}</p>
+                    <p className="text-slate-500 font-medium capitalize">Resumen estadístico de {monthName}</p>
                 </div>
                 <div className="bg-white px-6 py-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-6">
                     <div className="text-center">
