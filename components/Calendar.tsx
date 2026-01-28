@@ -50,24 +50,24 @@ export const Calendar: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#FDFCFB] overflow-hidden select-none p-4 md:p-8">
+    <div className="flex-1 flex flex-col bg-[#FDFCFB] overflow-hidden select-none p-2 md:p-8">
       {/* CALENDAR BODY */}
-      <div className="flex-1 flex flex-col bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden relative">
+      <div className="flex-1 flex flex-col bg-white rounded-[1.5rem] md:rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden relative">
 
-        {/* TOP DECORATION */}
-        <div className="absolute top-0 left-0 right-0 h-4 bg-slate-100 flex justify-around items-center px-12 z-20">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="w-4 h-4 rounded-full bg-[#FDFCFB] shadow-inner border border-slate-200"></div>
+        {/* TOP DECORATION - Smaller on mobile */}
+        <div className="absolute top-0 left-0 right-0 h-3 md:h-4 bg-slate-100 flex justify-around items-center px-6 md:px-12 z-20">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="w-2 md:w-4 h-2 md:h-4 rounded-full bg-[#FDFCFB] shadow-inner border border-slate-200"></div>
           ))}
         </div>
 
-        {/* WEEK HEADER */}
-        <div className="grid grid-cols-7 pt-10 pb-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+        {/* WEEK HEADER - Reduced padding on mobile */}
+        <div className="grid grid-cols-7 pt-6 md:pt-10 pb-2 md:pb-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
           {daysOfWeek.map((day, index) => (
             <div
               key={day}
               className={`
-                text-center text-[10px] font-black uppercase tracking-[0.2em]
+                text-center text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em]
                 ${index >= 5 ? 'text-rose-400' : 'text-slate-400'} 
               `}
             >
@@ -107,7 +107,7 @@ export const Calendar: React.FC<Props> = ({
                 key={dateKey}
                 className={`
                   relative border-r border-b border-slate-200/50 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group
-                  min-h-[100px] md:min-h-0
+                  min-h-[70px] md:min-h-0
                   ${cellBg}
                   hover:bg-white hover:shadow-[inset_0_0_20px_rgba(0,0,0,0.02)]
                 `}
@@ -117,11 +117,11 @@ export const Calendar: React.FC<Props> = ({
                 }}
                 onPointerEnter={() => handlePointerEnter(date)}
               >
-                {/* DAY NUMBER */}
+                {/* DAY NUMBER - Smaller on mobile */}
                 <div
                   className={`
-                    absolute top-3 left-4 text-sm font-black transition-all z-10
-                    ${isToday ? 'text-indigo-600 scale-125' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-amber-600/70' : 'text-slate-600'))}
+                    absolute top-1.5 md:top-3 left-2 md:left-4 text-xs md:text-sm font-black transition-all z-10
+                    ${isToday ? 'text-indigo-600 scale-110' : (isHoliday ? 'text-rose-600' : (isWeekend ? 'text-amber-600/70' : 'text-slate-600'))}
                     ${shift ? 'opacity-40 group-hover:opacity-100' : ''}
                   `}
                 >
@@ -129,36 +129,36 @@ export const Calendar: React.FC<Props> = ({
                   {isToday && <div className="w-1 h-1 bg-indigo-600 rounded-full mx-auto mt-0.5 animate-bounce"></div>}
                 </div>
 
-                {/* HOLIDAY RIBBON */}
+                {/* HOLIDAY RIBBON - Scaled for mobile */}
                 {isHoliday && (
-                  <div className="absolute top-0 right-0 overflow-hidden w-16 h-16 pointer-events-none">
-                    <div className="absolute top-3 -right-5 w-24 bg-rose-600 text-white text-[8px] font-black uppercase tracking-widest text-center py-1 rotate-45 shadow-[0_2px_4px_rgba(0,0,0,0.2)] border-b border-white/20">
-                      {holiday.name?.substring(0, 12)}
+                  <div className="absolute top-0 right-0 overflow-hidden w-8 md:w-16 h-8 md:h-16 pointer-events-none">
+                    <div className="absolute top-1 md:top-3 -right-4 md:-right-5 w-16 md:w-24 bg-rose-600 text-white text-[5px] md:text-[8px] font-black uppercase tracking-widest text-center py-0.5 md:py-1 rotate-45 shadow-[0_1px_2px_rgba(0,0,0,0.2)] border-b border-white/20">
+                      {holiday.name?.substring(0, 8)}
                     </div>
                   </div>
                 )}
 
-                {/* SHIFT CONTENT */}
+                {/* SHIFT CONTENT - Responsive sizes */}
                 {shift ? (
                   <div
-                    className="w-[85%] h-[70%] rounded-2xl flex flex-col items-center justify-center shadow-[0_8px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-2px_rgba(0,0,0,0.05)] transform transition-transform group-hover:scale-105 active:scale-95 animate-scale-in relative overflow-hidden"
-                    style={{ backgroundColor: shift.color, border: '3px solid white' }}
+                    className="w-[85%] h-[75%] rounded-xl md:rounded-2xl flex flex-col items-center justify-center shadow-lg transform transition-transform group-hover:scale-105 active:scale-95 animate-scale-in relative overflow-hidden"
+                    style={{ backgroundColor: shift.color, border: '2px md:border-3 solid white' }}
                   >
                     <div className="absolute inset-0 opacity-10 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]"></div>
-                    <span className="text-2xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">{shift.code}</span>
+                    <span className="text-sm md:text-2xl font-black text-white drop-shadow-md">{shift.code}</span>
                     <div className="flex items-center space-x-1 mt-0.5">
-                      <i className="fa-solid fa-clock text-[8px] text-white/70"></i>
-                      <span className="text-[9px] text-white font-bold tracking-tight">{shift.startTime} - {shift.endTime}</span>
+                      <i className="fa-solid fa-clock text-[6px] md:text-[8px] text-white/70"></i>
+                      <span className="text-[7px] md:text-[9px] text-white font-bold tracking-tight">{shift.startTime}</span>
                     </div>
-                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+                    <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
                   </div>
                 ) : (
-                  <div className="w-full h-full opacity-0 group-hover:opacity-10 transition-opacity bg-indigo-500 rounded-2xl scale-90" />
+                  <div className="w-full h-full opacity-0 group-hover:opacity-10 transition-opacity bg-indigo-500 rounded-xl md:rounded-2xl scale-90" />
                 )}
 
                 {/* TODAY PULSE */}
                 {isToday && !shift && (
-                  <div className="absolute inset-4 rounded-3xl border-2 border-indigo-200/50 animate-pulse border-dashed pointer-events-none"></div>
+                  <div className="absolute inset-2 md:inset-4 rounded-xl md:rounded-3xl border md:border-2 border-indigo-200/50 animate-pulse border-dashed pointer-events-none"></div>
                 )}
               </div>
             );
@@ -166,11 +166,11 @@ export const Calendar: React.FC<Props> = ({
         </div>
 
         {/* BOTTOM PAGE CURVE EFFECT */}
-        <div className="h-2 bg-gradient-to-b from-slate-200/20 to-transparent shrink-0"></div>
+        <div className="h-1 md:h-2 bg-gradient-to-b from-slate-200/10 to-transparent shrink-0"></div>
       </div>
 
       {/* SHADOW FOR 3D EFFECT */}
-      <div className="h-4 mx-8 bg-slate-200/20 rounded-full blur-xl -mt-2 shrink-0"></div>
+      <div className="h-2 md:h-4 mx-4 md:mx-8 bg-slate-200/10 rounded-full blur-xl -mt-1 md:-mt-2 shrink-0"></div>
     </div>
   );
 };
