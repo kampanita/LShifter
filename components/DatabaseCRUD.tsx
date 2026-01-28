@@ -123,7 +123,17 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
 
             const { data: res, error } = await query;
             if (error) throw error;
-            setData(res || []);
+
+            // TRANSFORM DATA: DB (Minutes) -> UI (Hours)
+            let processedData = res || [];
+            if (tableName === 'shift_types') {
+                processedData = processedData.map(item => ({
+                    ...item,
+                    default_duration: item.default_duration ? Number((item.default_duration / 60).toFixed(2)) : null
+                }));
+            }
+
+            setData(processedData);
         } catch (err: any) {
             setErrorNotice(err.message);
         } finally {
@@ -147,13 +157,28 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         }
     };
 
+    const handleInputChange = (field: string, value: any) => {
+        const newItem = { ...editingItem, [field]: value };
+
+        // Auto-calculate Duration on Time Change
+        if (tableName === 'shift_types' && (field === 'default_start' || field === 'default_end')) {
+            const start = field === 'default_start' ? value : newItem.default_start;
+            const end = field === 'default_end' ? value : newItem.default_end;
+
+            if (start && end) {
+                const dur = calculateDuration(start, end);
+                if (dur !== null) newItem.default_duration = dur;
+            }
+        }
+
+        setEditingItem(newItem);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const payload: any = {};
 
-        // Auto-calculate duration for shifts IF not manually set (or allow overwrite)
-        // We only recalc if user changed times. For now, rely on what's in editingItem
-        // which might have been calculated on change or manually edited.
+        // Auto-calculate duration for shifts shift_types if missing
         if (tableName === 'shift_types' && !editingItem.default_duration && editingItem.default_start && editingItem.default_end) {
             const duration = calculateDuration(editingItem.default_start, editingItem.default_end);
             editingItem.default_duration = duration;
@@ -161,6 +186,11 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
 
         for (const field of tableDef.fields) {
             payload[field.name] = castValue(editingItem[field.name], field.type, field.required);
+        }
+
+        // TRANSFORM PAYLOAD: UI (Hours) -> DB (Minutes)
+        if (tableName === 'shift_types' && payload.default_duration) {
+            payload.default_duration = Math.round(Number(payload.default_duration) * 60);
         }
 
         try {
@@ -352,8 +382,8 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{f.label}</label>
                                         {f.type === 'color' ? (
                                             <div className="flex items-center space-x-3">
-                                                <input type="color" className="w-12 h-12 rounded-xl cursor-pointer" value={editingItem[f.name] || '#6366f1'} onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })} />
-                                                <input type="text" className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-mono text-xs" value={editingItem[f.name] || '#6366f1'} onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })} />
+                                                <input type="color" className="w-12 h-12 rounded-xl cursor-pointer" value={editingItem[f.name] || '#6366f1'} onChange={e => handleInputChange(f.name, e.target.value)} />
+                                                <input type="text" className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-mono text-xs" value={editingItem[f.name] || '#6366f1'} onChange={e => handleInputChange(f.name, e.target.value)} />
                                             </div>
                                         ) : (
                                             <input
@@ -361,7 +391,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                                                 readOnly={f.readOnly}
                                                 className={`w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3.5 text-sm font-bold focus:bg-white outline-none transition-all ${f.readOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 value={editingItem[f.name] ?? ''}
-                                                onChange={e => setEditingItem({ ...editingItem, [f.name]: e.target.value })}
+                                                onChange={e => handleInputChange(f.name, e.target.value)}
                                             />
                                         )}
                                         {f.name === 'default_duration' && <p className="text-[10px] text-indigo-400 italic font-medium ml-1">Autocalculated upon save.</p>}

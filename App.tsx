@@ -86,44 +86,46 @@ function App() {
       console.log("🔄 SYNCING DATA for Profile:", profileId);
 
       const fetchShifts = async () => {
-        const { data } = await supabase.from('shift_types').select('*').or(`profile_id.eq.${profileId},profile_id.is.null`).order('name');
-        if (data && data.length > 0) {
-          const mapped: ShiftType[] = data.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            code: s.name.charAt(0).toUpperCase(),
-            color: s.color || '#4f46e5',
-            startTime: s.default_start?.substring(0, 5) || '',
-            endTime: s.default_end?.substring(0, 5) || '',
-            default_duration: s.default_duration
-          }));
-          setShiftTypes(mapped);
-        } else if (profileId) {
-          // SEED DEFAULT SHIFTS IF EMPTY
-          console.log("🌱 SEEDING Default Shifts for profile:", profileId);
+        let { data: currentData } = await supabase.from('shift_types').select('*').or(`profile_id.eq.${profileId},profile_id.is.null`).order('name');
+
+        let finalData = currentData || [];
+
+        // SEED DEFAULT SHIFTS IF MISSING
+        if (profileId) {
+          console.log("🌱 CHECKING Seeding for profile:", profileId);
+          // Default duration is in MINUTES for DB (480 = 8 hours)
           const defaults = [
-            { name: 'Mañana', color: '#F59E0B', default_start: '06:00', default_end: '14:00', default_duration: 8, profile_id: profileId },
-            { name: 'Tarde', color: '#10B981', default_start: '14:00', default_end: '22:00', default_duration: 8, profile_id: profileId },
-            { name: 'Noche', color: '#3B82F6', default_start: '22:00', default_end: '06:00', default_duration: 8, profile_id: profileId },
+            { name: 'Mañana', color: '#F59E0B', default_start: '06:00', default_end: '14:00', default_duration: 480, profile_id: profileId },
+            { name: 'Tarde', color: '#10B981', default_start: '14:00', default_end: '22:00', default_duration: 480, profile_id: profileId },
+            { name: 'Noche', color: '#3B82F6', default_start: '22:00', default_end: '06:00', default_duration: 480, profile_id: profileId },
           ];
-          const { error } = await supabase.from('shift_types').insert(defaults);
-          if (!error) {
-            // Retry fetch recursively once
-            const { data: retry } = await supabase.from('shift_types').select('*').eq('profile_id', profileId);
-            if (retry) {
-              const mapped: ShiftType[] = retry.map((s: any) => ({
-                id: s.id,
-                name: s.name,
-                code: s.name.charAt(0).toUpperCase(),
-                color: s.color || '#4f46e5',
-                startTime: s.default_start?.substring(0, 5) || '',
-                endTime: s.default_end?.substring(0, 5) || '',
-                default_duration: s.default_duration
-              }));
-              setShiftTypes(mapped);
+
+          const existingNames = new Set(finalData.map((s: any) => s.name));
+          const toInsert = defaults.filter(d => !existingNames.has(d.name));
+
+          if (toInsert.length > 0) {
+            console.log("🌱 INSERTING Missing Defaults:", toInsert.map(d => d.name));
+            const { data: inserted } = await supabase.from('shift_types').insert(toInsert).select();
+            if (inserted) {
+              finalData = [...finalData, ...inserted];
+              // Re-sort by name to keep it tidy
+              finalData.sort((a, b) => a.name.localeCompare(b.name));
             }
           }
         }
+
+        // Map to App State (Domain = Hours)
+        const mapped: ShiftType[] = finalData.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          code: s.name.charAt(0).toUpperCase(),
+          color: s.color || '#4f46e5',
+          startTime: s.default_start?.substring(0, 5) || '',
+          endTime: s.default_end?.substring(0, 5) || '',
+          // Convert DB Minutes -> App Hours
+          default_duration: s.default_duration ? Number((s.default_duration / 60).toFixed(2)) : undefined
+        }));
+        setShiftTypes(mapped);
       };
 
       const fetchHolidays = async () => {
