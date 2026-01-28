@@ -51,57 +51,58 @@ function App() {
 
   // Sync Shift Types and Data from Supabase
   useEffect(() => {
-    if (session) {
-      const fetchShifts = async () => {
-        const { data, error } = await supabase.from('shift_types').select('*').eq('profile_id', profileId).order('name');
-        if (data) {
-          const mapped: ShiftType[] = data.map((s: any) => ({
-            id: s.id,
-            name: s.name,
-            code: s.name.charAt(0).toUpperCase(),
-            color: s.color || '#4f46e5',
-            startTime: s.default_start?.substring(0, 5) || '',
-            endTime: s.default_end?.substring(0, 5) || '',
-            default_duration: s.default_duration
-          }));
-          setShiftTypes(mapped);
-        }
-      };
-
-      const fetchHolidays = async () => {
-        const { data } = await supabase.from('holidays').select('*').eq('profile_id', profileId);
-        if (data) {
-          const mapped: Record<string, Holiday> = {};
-          data.forEach((h: any) => {
-            mapped[h.date] = { date: h.date, name: h.name, country_code: h.country_code };
-          });
-          setHolidays(mapped);
-        }
-      };
-
-      if (profileId) {
-        fetchShifts();
-        fetchHolidays();
+    const fetchShifts = async (pId: string) => {
+      const { data } = await supabase.from('shift_types').select('*').eq('profile_id', pId).order('name');
+      if (data) {
+        const mapped: ShiftType[] = data.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          code: s.name.charAt(0).toUpperCase(),
+          color: s.color || '#4f46e5',
+          startTime: s.default_start?.substring(0, 5) || '',
+          endTime: s.default_end?.substring(0, 5) || '',
+          default_duration: s.default_duration
+        }));
+        setShiftTypes(mapped);
       }
+    };
 
-      // Resolve Profile ID for DB sync and Sync Meta
-      const resolveProfile = async () => {
-        if (localStorage.getItem('shifter_guest_mode') === 'true') return;
+    const fetchHolidays = async (pId: string) => {
+      const { data } = await supabase.from('holidays').select('*').eq('profile_id', pId);
+      if (data) {
+        const mapped: Record<string, Holiday> = {};
+        data.forEach((h: any) => {
+          mapped[h.date] = { date: h.date, name: h.name, country_code: h.country_code };
+        });
+        setHolidays(mapped);
+      }
+    };
 
-        const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
+    const resolveProfile = async () => {
+      if (!session?.user) return;
+      if (localStorage.getItem('shifter_guest_mode') === 'true') return;
 
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .upsert({
-            user_id: userId,
-            name: fullName
-          }, { onConflict: 'user_id' })
-          .select()
-          .single();
+      const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
 
-        if (profile) setProfileId(profile.id);
-        else if (error) console.error('Profile sync error:', error.message);
-      };
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          name: fullName
+        }, { onConflict: 'user_id' })
+        .select()
+        .single();
+
+      if (profile) {
+        setProfileId(profile.id);
+        fetchShifts(profile.id);
+        fetchHolidays(profile.id);
+      } else if (error) {
+        console.error('Profile sync error:', error.message);
+      }
+    };
+
+    if (session) {
       resolveProfile();
     } else {
       setShiftTypes(storageService.getShiftTypes());
