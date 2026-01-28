@@ -5,6 +5,7 @@ export interface ShiftType {
   color: string; // Hex code
   startTime: string;
   endTime: string;
+  default_duration?: number;
 }
 
 export interface DayAssignment {
