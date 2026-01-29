@@ -184,28 +184,67 @@ export const StatisticsView: React.FC<Props> = ({ currentDate: initialDate, assi
                     {/* Shift Counts */}
                     <div className="lg:col-span-2 space-y-6">
                         {viewMode === 'year' && (
-                            <div className="bg-white rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-slate-100">
-                                <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center">
+                            <div className="bg-transparent space-y-6">
+                                <h3 className="text-lg font-black text-slate-800 flex items-center px-2">
                                     <i className="fa-solid fa-calendar-days mr-3 text-indigo-500"></i>
-                                    Desglose Mensual
+                                    Vista Anual
                                 </h3>
-                                <div className="space-y-1">
-                                    {monthlyBreakdown.map((m, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors">
-                                            <span className="text-sm font-bold text-slate-700 capitalize w-32">{m.name}</span>
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                    {Array.from({ length: 12 }).map((_, monthIndex) => {
+                                        const monthDate = new Date(viewDate.getFullYear(), monthIndex, 1);
+                                        const days = getDaysInMonth(monthDate);
+                                        const padding = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay() === 0 ? 6 : new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).getDay() - 1;
+                                        const monthName = monthDate.toLocaleString('es-ES', { month: 'long' });
 
-                                            <div className="flex-1 mx-4 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-indigo-500 rounded-full"
-                                                    style={{ width: `${Math.min((m.stats.totalHours / 180) * 100, 100)}%` }} // normalized to ~180h max
-                                                ></div>
-                                            </div>
+                                        return (
+                                            <div key={monthIndex} className="bg-white rounded-[1.5rem] p-4 border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                                                <div className="flex items-center justify-between mb-3 px-1">
+                                                    <h4 className="text-sm font-black text-slate-800 capitalize">{monthName}</h4>
+                                                    <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {calculateStats(days).totalHours.toFixed(1)}h
+                                                    </span>
+                                                </div>
 
-                                            <div className="text-right w-24">
-                                                <span className="block text-sm font-black text-slate-800">{m.stats.totalHours.toFixed(1)}h</span>
+                                                {/* Mini Grid */}
+                                                <div className="grid grid-cols-7 gap-1">
+                                                    {/* Headers */}
+                                                    {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => (
+                                                        <div key={d} className="text-center text-[8px] font-black text-slate-300">{d}</div>
+                                                    ))}
+
+                                                    {/* Padding */}
+                                                    {Array.from({ length: padding }).map((_, i) => <div key={`p-${i}`} />)}
+
+                                                    {/* Days */}
+                                                    {days.map(d => {
+                                                        const key = formatDateKey(d);
+                                                        const assignment = assignments[key];
+                                                        const holiday = holidays[key];
+                                                        const shift = assignment?.shiftTypeId ? shiftTypes.find(s => s.id === assignment.shiftTypeId) : null;
+
+                                                        let bgClass = "bg-slate-50 text-slate-400";
+                                                        if (holiday) bgClass = "bg-rose-50 text-rose-500 font-bold ring-1 ring-rose-100";
+                                                        else if (shift) bgClass = "text-white font-bold shadow-sm";
+
+                                                        return (
+                                                            <div
+                                                                key={key}
+                                                                className={`
+                                                                    aspect-square rounded-md flex items-center justify-center text-[10px] relative overflow-hidden transition-all
+                                                                    ${bgClass}
+                                                                `}
+                                                                style={shift && !holiday ? { backgroundColor: shift.color } : {}}
+                                                                title={shift ? `${shift.name} (${shift.default_duration}h)` : ''}
+                                                            >
+                                                                {holiday && <div className="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-bl-full"></div>}
+                                                                <span className="z-10">{d.getDate()}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}

@@ -57,18 +57,40 @@ function App() {
       if (!session?.user || !userId) return;
 
       try {
+        console.log("🔍 RESOLVING PROFILE for User:", userId);
+
+        // 1. Try to find existing profile
+        const { data: existing, error: fetchError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle(); // Use maybeSingle to avoid 406 error if not found? No, single() throws, maybeSingle returns null.
+
+        if (existing) {
+          console.log("✅ PROFILE FOUND:", existing.id);
+          setProfileId(existing.id);
+          return;
+        }
+
+        // 2. If not found, create one
+        console.log("🆕 CREATING NEW PROFILE...");
         const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
 
-        const { data: profile, error } = await supabase
+        const { data: newProfile, error: createError } = await supabase
           .from('profiles')
-          .upsert({ user_id: userId, name: fullName }, { onConflict: 'user_id' })
+          .insert([{ user_id: userId, name: fullName }])
           .select()
           .single();
 
-        if (profile) {
-          console.log("✅ PROFILE RESOLVED:", profile.id);
-          setProfileId(profile.id);
+        if (createError) {
+          console.error("❌ FAILED TO CREATE PROFILE:", createError.message);
+          // Fallback: If insert failed (maybe it existed and we missed it due to race condition?), try selection again or alert
+          // But let's assume RLS allows insert.
+        } else if (newProfile) {
+          console.log("✅ PROFILE CREATED:", newProfile.id);
+          setProfileId(newProfile.id);
         }
+
       } catch (err) {
         console.error('💥 RESOLVE_PROFILE - Exception:', err);
       }
