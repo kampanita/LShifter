@@ -105,20 +105,16 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         setLoading(true);
         setErrorNotice(null);
         try {
-            // First, get the profile_id for this user to filter accurately
-            const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
-            const pid = profile?.id;
-
             let query = supabase.from(tableName).select('*').limit(100);
 
             // Apply isolation if not the profiles table itself
             if (tableName === 'profiles') {
                 query = query.eq('user_id', userId);
-            } else if (tableName === 'holidays' && pid) {
-                // For holidays, show both user-specific and global (null profile_id)
-                query = query.or(`profile_id.eq.${pid},profile_id.is.null`);
-            } else if (pid) {
-                query = query.eq('profile_id', pid);
+            } else if (tableName === 'holidays') {
+                // For holidays, show both user-specific and global (null user_id)
+                query = query.or(`user_id.eq.${userId},user_id.is.null`);
+            } else {
+                query = query.eq('user_id', userId);
             }
 
             const { data: res, error } = await query;
@@ -148,7 +144,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
 
     const handleDelete = async (item: any) => {
         if (!item.id) return;
-        if (tableName === 'holidays' && !item.profile_id) {
+        if (tableName === 'holidays' && !item.user_id) {
             alert("Cannot delete global/public holidays.");
             return;
         }
@@ -199,12 +195,9 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
         }
 
         try {
-            // Get profile_id to ensure ownership
-            const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
-            const pid = profile?.id;
-
-            if (tableName !== 'profiles' && pid) {
-                payload.profile_id = pid;
+            // Use userId directly
+            if (tableName !== 'profiles') {
+                payload.user_id = userId;
             }
 
             if (editingItem.id) {
@@ -224,17 +217,13 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
     const handleBulkImport = async (newHolidays: { date: string, name: string }[]) => {
         try {
             setLoading(true);
-            const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
-            const pid = profile?.id;
 
-            if (!pid) throw new Error("Profile not found.");
-
-            // 1. Fetch existing holidays for this profile to prevent duplicates
+            // 1. Fetch existing holidays for this user to prevent duplicates
             // We fetch ONLY dates to be efficient
             const { data: existing, error: fetchErr } = await supabase
                 .from('holidays')
                 .select('date')
-                .eq('profile_id', pid);
+                .eq('user_id', userId);
 
             if (fetchErr) throw fetchErr;
 
@@ -247,7 +236,7 @@ export const DatabaseCRUD: React.FC<Props> = ({ tableName, title, userId }) => {
                     date: h.date,
                     name: h.name,
                     country_code: 'ES',
-                    profile_id: pid
+                    user_id: userId
                 }));
 
             if (toInsert.length === 0) {

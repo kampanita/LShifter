@@ -18,7 +18,7 @@ import { Login3DBackground } from './components/Login3DBackground';
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [profileId, setProfileId] = useState<string | null>(null);
+  // profileId removed - using userId directly
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
@@ -51,74 +51,29 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Initial Load & Auth Resolution
+  // Load guest data if not authenticated
   useEffect(() => {
-    const resolveProfile = async () => {
-      if (!session?.user || !userId) return;
-
-      try {
-        console.log("🔍 RESOLVING PROFILE for User:", userId);
-
-        // 1. Try to find existing profile
-        const { data: existing, error: fetchError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle(); // Use maybeSingle to avoid 406 error if not found? No, single() throws, maybeSingle returns null.
-
-        if (existing) {
-          console.log("✅ PROFILE FOUND:", existing.id);
-          setProfileId(existing.id);
-          return;
-        }
-
-        // 2. If not found, create one
-        console.log("🆕 CREATING NEW PROFILE...");
-        const fullName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'My Profile';
-
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert([{ user_id: userId, name: fullName }])
-          .select()
-          .single();
-
-        if (createError) {
-          console.error("❌ FAILED TO CREATE PROFILE:", createError.message);
-          // Fallback: If insert failed (maybe it existed and we missed it due to race condition?), try selection again or alert
-          // But let's assume RLS allows insert.
-        } else if (newProfile) {
-          console.log("✅ PROFILE CREATED:", newProfile.id);
-          setProfileId(newProfile.id);
-        }
-
-      } catch (err) {
-        console.error('💥 RESOLVE_PROFILE - Exception:', err);
-      }
-    };
-
-    if (session && userId) {
-      resolveProfile();
-    } else {
+    if (!session && !userId) {
       setShiftTypes(storageService.getShiftTypes('guest'));
     }
   }, [session, userId]);
-  // Separate Effect: Trigger Data Fetch when ProfileID changes OR View changes (Refocus)
+  // Separate Effect: Trigger Data Fetch when userId changes OR View changes (Refocus)
   useEffect(() => {
-    if (profileId) {
-      console.log("🔄 SYNCING DATA for Profile:", profileId);
+    if (userId) {
+      console.log("🔄 SYNCING DATA for User:", userId);
 
       const fetchShifts = async () => {
-        let { data: currentData } = await supabase.from('shift_types').select('*').or(`profile_id.eq.${profileId},profile_id.is.null`).order('name');
+        let { data: currentData } = await supabase.from('shift_types').select('*').or(`user_id.eq.${userId},user_id.is.null`).order('name');
 
         let finalData = currentData || [];
 
         // SEED DEFAULT SHIFTS IF MISSING
-        if (profileId) {
+        if (userId) {
           // Default duration is in MINUTES for DB (480 = 8 hours)
           const defaults = [
-            { name: 'Mañana', color: '#F59E0B', default_start: '06:00', default_end: '14:00', default_duration: 480, profile_id: profileId },
-            { name: 'Tarde', color: '#10B981', default_start: '14:00', default_end: '22:00', default_duration: 480, profile_id: profileId },
-            { name: 'Noche', color: '#3B82F6', default_start: '22:00', default_end: '06:00', default_duration: 480, profile_id: profileId },
+            { name: 'Mañana', color: '#F59E0B', default_start: '06:00', default_end: '14:00', default_duration: 480, user_id: userId },
+            { name: 'Tarde', color: '#10B981', default_start: '14:00', default_end: '22:00', default_duration: 480, user_id: userId },
+            { name: 'Noche', color: '#3B82F6', default_start: '22:00', default_end: '06:00', default_duration: 480, user_id: userId },
           ];
 
           // Case insensitive check
@@ -161,7 +116,7 @@ function App() {
       };
 
       const fetchHolidays = async () => {
-        const { data } = await supabase.from('holidays').select('*').or(`profile_id.eq.${profileId},profile_id.is.null`);
+        const { data } = await supabase.from('holidays').select('*').or(`user_id.eq.${userId},user_id.is.null`);
         if (data && data.length > 0) {
           const mapped: Record<string, Holiday> = {};
           data.forEach((h: any) => {
@@ -174,7 +129,7 @@ function App() {
       };
 
       const fetchAssignments = async () => {
-        const { data } = await supabase.from('days_assignments').select('*').eq('profile_id', profileId);
+        const { data } = await supabase.from('days_assignments').select('*').eq('user_id', userId);
         if (data) {
           const mapped: Record<string, DayAssignment> = {};
           data.forEach((a: any) => {
@@ -188,7 +143,7 @@ function App() {
       fetchHolidays();
       fetchAssignments();
     }
-  }, [profileId, currentView]);
+  }, [userId, currentView]);
 
   const handlePaint = useCallback((date: Date) => {
     if (!session?.user || !selectedShiftTypeId) return;
@@ -206,14 +161,14 @@ function App() {
       return { ...prev, [key]: newAssignment };
     });
 
-    // Database Sync - Using calculated values directly
-    if (profileId && localStorage.getItem('shifter_guest_mode') !== 'true') {
+    // Database Sync - Using userId directly
+    if (userId && localStorage.getItem('shifter_guest_mode') !== 'true') {
       supabase.from('days_assignments').upsert({
-        profile_id: profileId,
+        user_id: userId,
         date: key,
         shift_type_id: shiftToSet,
         note: assignments[key]?.note // Keep existing note if any
-      }, { onConflict: 'profile_id,date' }).then(({ error }) => {
+      }, { onConflict: 'user_id,date' }).then(({ error }) => {
         if (error) {
           console.error('DB Sync Error:', error.message);
         } else {
@@ -230,7 +185,7 @@ function App() {
     };
     storageService.saveAssignment(session.user.id, tempAssignment);
 
-  }, [session, userId, profileId, selectedShiftTypeId, assignments]);
+  }, [session, userId, selectedShiftTypeId, assignments]);
 
   const toggleTheme = () => {
     const themes: ('light' | 'dark' | 'sunset')[] = ['light', 'dark', 'sunset'];
