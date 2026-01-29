@@ -54,6 +54,7 @@ export const Sidebar: React.FC<Props> = ({
               <div className="overflow-hidden">
                 <h2 className="font-bold text-lg truncate">{userName}</h2>
                 <p className="text-xs text-indigo-200 truncate">{session.user.email}</p>
+                <p className="text-xs text-indigo-100 truncate">v0.0.6</p>
               </div>
             </div>
           </div>
